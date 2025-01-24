@@ -29,6 +29,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bottom_box.set_margin_bottom(10)
         self.bottom_box.set_margin_start(10)
         self.bottom_box.set_margin_end(10)
+        self.bottom_box.set_homogeneous(True)
 
         self.set_child(self.main_box)
         self.main_box.append(self.center_box)
@@ -92,5 +93,5 @@ class MyApp(Adw.Application):
         self.win.present() # показываем это окно
 
 
-app = MyApp() # создать объект приложения
-app.run(sys.argv) # запустить приложение
+app = MyApp()
+app.run(sys.argv)
