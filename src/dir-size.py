@@ -23,7 +23,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
 
         self.center_box.set_vexpand(True)
-        
+
         self.bottom_box.set_spacing(10)
         self.bottom_box.set_margin_top(10)
         self.bottom_box.set_margin_bottom(10)
@@ -35,10 +35,22 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box.append(self.center_box)
         self.main_box.append(self.bottom_box)
 
+        self.result_list_model = Gtk.StringList.new() # model
+        self.result_list_model.append('xxx')
+        self.result_list_model.append('yyy')
+        sel_model = Gtk.SingleSelection.new(self.result_list_model)
+        factory = Gtk.SignalListItemFactory.new();
+        # factory.connect("setup", setup_listitem_cb);
+        # factory.connect("bind", bind_listitem_cb);
+
+
+        self.result_list = Gtk.ListView.new(sel_model, factory)
+        self.center_box.append(self.result_list)
+
         self.open_bt = Gtk.Button(label="Select dir")
         self.open_bt.connect("clicked", self.show_open_dialog)
         self.bottom_box.append(self.open_bt)
-        
+
         self.clac_bt = Gtk.Button(label="Calculate")
         self.clac_bt.connect('clicked', self.calculate)
         self.bottom_box.append(self.clac_bt)
@@ -75,7 +87,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 self.set_title(self.app_title + ":" + self.root_dir)
         except GLib.Error as error:
             print(f"Error opening file: {error.message}")
-            
+
     def calculate(self, button):
         print("calculate")
 
