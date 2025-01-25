@@ -33,8 +33,12 @@ class FileSizeList():
         factory_c2.connect("bind", self._bind_c2)
 
         self.list_view = Gtk.ColumnView.new(sel_model)
-        self.list_view.append_column(Gtk.ColumnViewColumn.new("size", factory_c1))
-        self.list_view.append_column(Gtk.ColumnViewColumn.new("name", factory_c2))
+        self.list_view.set_hexpand(True)
+        c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
+        self.list_view.append_column(c1)
+        c2 = Gtk.ColumnViewColumn.new("name", factory_c2)
+        c2.set_expand(True);
+        self.list_view.append_column(c2)
         self.list_view.connect ("activate", self._activate_cb);
 
     def _setup_c1(self, factory, item):
@@ -67,7 +71,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.set_default_size(600, 250)
+        self.set_default_size(600, 480)
         self.set_title(self.app_title)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -75,6 +79,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.center_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.center_box.set_vexpand(True)
+        self.center_box.set_hexpand(True)
         self.main_box.append(self.center_box)
 
         self.bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -87,9 +92,44 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box.append(self.bottom_box)
 
         self.result_list = FileSizeList()
-        self.center_box.append(self.result_list.list_view)
+
+        sw = Gtk.ScrolledWindow()
+        self.center_box.append(sw)
+        sw.set_child(self.result_list.list_view)
+
         self.result_list.append("xxx", 123)
         self.result_list.append("yyy", 456)
+        self.result_list.append("yyy", 4561)
+        self.result_list.append("yyy", 4562)
+        self.result_list.append("yyy", 4563)
+        self.result_list.append("yyy", 4564)
+        self.result_list.append("yyy", 4565)
+        self.result_list.append("yyy", 4566)
+        self.result_list.append("yyy", 4567)
+        self.result_list.append("yyy", 4568)
+        self.result_list.append("yyy", 4569)
+        self.result_list.append("yyy", 4560)
+        self.result_list.append("yyy", 4561)
+        self.result_list.append("yyy", 4562)
+        self.result_list.append("yyy", 4563)
+        self.result_list.append("yyy", 4564)
+        self.result_list.append("yyy", 4565)
+        self.result_list.append("yyy", 4566)
+        self.result_list.append("yyy", 4567)
+        self.result_list.append("yyy", 4568)
+        self.result_list.append("yyy", 4569)
+        self.result_list.append("yyy", 4560)
+        self.result_list.append("yyy", 4560)
+        self.result_list.append("yyy", 4561)
+        self.result_list.append("yyy", 4562)
+        self.result_list.append("yyy", 4563)
+        self.result_list.append("yyy", 4564)
+        self.result_list.append("yyy", 4565)
+        self.result_list.append("yyy", 4566)
+        self.result_list.append("yyy", 4567)
+        self.result_list.append("yyy", 4568)
+        self.result_list.append("yyy", 4569)
+        self.result_list.append("yyy", 4560)
 
         self.open_bt = Gtk.Button(label="Select dir")
         self.open_bt.connect("clicked", self.show_open_dialog)
