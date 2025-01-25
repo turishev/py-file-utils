@@ -24,6 +24,7 @@ class FileSizeList():
         sel_model = Gtk.SingleSelection.new(self.store)
         self.list_view = Gtk.ColumnView.new(sel_model)
 
+
         factory_c1 = Gtk.SignalListItemFactory()
         factory_c1.connect("setup", self._setup_c1)
         factory_c1.connect("bind", self._bind_c1)
@@ -35,10 +36,16 @@ class FileSizeList():
         self.list_view = Gtk.ColumnView.new(sel_model)
         self.list_view.set_hexpand(True)
         c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
+        c1.set_sorter(Gtk.StringSorter.new())
         self.list_view.append_column(c1)
+
         c2 = Gtk.ColumnViewColumn.new("name", factory_c2)
         c2.set_expand(True);
+        c2.set_sorter(Gtk.StringSorter.new())
         self.list_view.append_column(c2)
+
+        self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # GTK_SORT_ASCENDING
+
         self.list_view.connect ("activate", self._activate_cb);
 
     def _setup_c1(self, factory, item):
@@ -96,11 +103,13 @@ class MainWindow(Gtk.ApplicationWindow):
         sw = Gtk.ScrolledWindow()
         self.center_box.append(sw)
         sw.set_child(self.result_list.list_view)
+        # self.result_list.list_view.set_self.result_list.list_view.set_vscroll_policy()
+        # self.center_box.append(self.result_list.list_view)
 
         self.result_list.append("xxx", 123)
-        self.result_list.append("yyy", 456)
-        self.result_list.append("yyy", 4561)
-        self.result_list.append("yyy", 4562)
+        self.result_list.append("aaa", 456)
+        self.result_list.append("zzz", 4561)
+        self.result_list.append("bbb", 4562)
         self.result_list.append("yyy", 4563)
         self.result_list.append("yyy", 4564)
         self.result_list.append("yyy", 4565)
@@ -112,8 +121,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.result_list.append("yyy", 4561)
         self.result_list.append("yyy", 4562)
         self.result_list.append("yyy", 4563)
-        self.result_list.append("yyy", 4564)
-        self.result_list.append("yyy", 4565)
+        self.result_list.append("yyy", 4)
+        self.result_list.append("yyy", 5)
         self.result_list.append("yyy", 4566)
         self.result_list.append("yyy", 4567)
         self.result_list.append("yyy", 4568)
