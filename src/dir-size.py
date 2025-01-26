@@ -23,9 +23,6 @@ class DataObject(GObject.GObject):
 class FileSizeList():
     def __init__(self):
         self.store = Gio.ListStore.new(DataObject)
-        sel_model = Gtk.SingleSelection.new(self.store)
-        self.list_view = Gtk.ColumnView.new(sel_model)
-
 
         factory_c1 = Gtk.SignalListItemFactory()
         factory_c1.connect("setup", self._setup_c1)
@@ -35,25 +32,31 @@ class FileSizeList():
         factory_c2.connect("setup", self._setup_c2)
         factory_c2.connect("bind", self._bind_c2)
 
-        self.list_view = Gtk.ColumnView.new(sel_model)
-        self.list_view.set_hexpand(True)
         c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
-        # property_expression = Gtk.PropertyExpression.new(DataObject, None, property_name)
-        # c1.set_sorter(Gtk.StringSorter.new())
-        c1.set_sorter(Gtk.NumericSorter.new())
-        self.list_view.append_column(c1)
+        c1.set_sorter(Gtk.NumericSorter.new(Gtk.PropertyExpression.new(DataObject, None, "number")))
 
         c2 = Gtk.ColumnViewColumn.new("name", factory_c2)
+        c2.set_sorter(Gtk.StringSorter.new(Gtk.PropertyExpression.new(DataObject, None, "text")))
         c2.set_expand(True);
-        c2.set_sorter(Gtk.StringSorter.new())
+
+        self.list_view = Gtk.ColumnView.new()
+        self.list_view.append_column(c1)
         self.list_view.append_column(c2)
 
-        self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # GTK_SORT_ASCENDING
+        sorter = Gtk.ColumnView.get_sorter(self.list_view)
+        self.sort_model = Gtk.SortListModel.new(self.store, sorter)
+        self.selection = Gtk.SingleSelection.new(self.sort_model)
+        self.selection.connect("selection-changed", self._on_sel_changed)
 
+        self.list_view.set_model(self.selection)
+        self.list_view.set_hexpand(True)
+        self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect ("activate", self._activate_cb);
+
 
     def _setup_c1(self, factory, item):
         label = Gtk.Label()
+        label.set_xalign(1.0)
         item.set_child(label)
 
     def _bind_c1(self, factory, item):
@@ -62,16 +65,22 @@ class FileSizeList():
         label.set_text(str(obj.number))
 
     def _setup_c2(self, factory, item):
-        label = Gtk.EditableLabel()
+        label = Gtk.Label()
+        label.set_xalign(0.0)
         item.set_child(label)
 
     def _bind_c2(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
         label.set_text(obj.text)
-        label.bind_property("text", obj, "text")
 
     def _activate_cb(self): pass
+
+    def _on_sel_changed(self, selection, position, item):
+        if item is not None:
+            print(f"Selected item: {selection}, {position}, {item}")
+        else:
+            print("No item selected")
 
     def append(self, name, size):
         self.store.append(DataObject(name, size))
@@ -107,8 +116,6 @@ class MainWindow(Gtk.ApplicationWindow):
         sw = Gtk.ScrolledWindow()
         self.center_box.append(sw)
         sw.set_child(self.result_list.list_view)
-        # self.result_list.list_view.set_self.result_list.list_view.set_vscroll_policy()
-        # self.center_box.append(self.result_list.list_view)
 
         self.result_list.append("xxx", 123)
         self.result_list.append("aaa", 456)
