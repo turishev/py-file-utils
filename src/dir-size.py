@@ -9,8 +9,10 @@ from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
 
 
 class DataObject(GObject.GObject):
-    #__gtype_name__ = 'DataObject'
-    text = GObject.Property(type=str, default=None)
+    __gtype_name__ = 'DataObject'
+
+    text = GObject.Property(type=GObject.TYPE_STRING, default="")
+    number = GObject.Property(type=GObject.TYPE_UINT64, default=0)
 
     def __init__(self, text, number):
         super().__init__()
@@ -36,7 +38,9 @@ class FileSizeList():
         self.list_view = Gtk.ColumnView.new(sel_model)
         self.list_view.set_hexpand(True)
         c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
-        c1.set_sorter(Gtk.StringSorter.new())
+        # property_expression = Gtk.PropertyExpression.new(DataObject, None, property_name)
+        # c1.set_sorter(Gtk.StringSorter.new())
+        c1.set_sorter(Gtk.NumericSorter.new())
         self.list_view.append_column(c1)
 
         c2 = Gtk.ColumnViewColumn.new("name", factory_c2)
@@ -55,7 +59,7 @@ class FileSizeList():
     def _bind_c1(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
-        label.set_text(obj.number)
+        label.set_text(str(obj.number))
 
     def _setup_c2(self, factory, item):
         label = Gtk.EditableLabel()
@@ -70,7 +74,7 @@ class FileSizeList():
     def _activate_cb(self): pass
 
     def append(self, name, size):
-        self.store.append(DataObject(name, str(size)))
+        self.store.append(DataObject(name, size))
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -108,37 +112,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.result_list.append("xxx", 123)
         self.result_list.append("aaa", 456)
-        self.result_list.append("zzz", 4561)
-        self.result_list.append("bbb", 4562)
-        self.result_list.append("yyy", 4563)
-        self.result_list.append("yyy", 4564)
-        self.result_list.append("yyy", 4565)
-        self.result_list.append("yyy", 4566)
-        self.result_list.append("yyy", 4567)
-        self.result_list.append("yyy", 4568)
-        self.result_list.append("yyy", 4569)
-        self.result_list.append("yyy", 4560)
-        self.result_list.append("yyy", 4561)
-        self.result_list.append("yyy", 4562)
-        self.result_list.append("yyy", 4563)
-        self.result_list.append("yyy", 4)
-        self.result_list.append("yyy", 5)
-        self.result_list.append("yyy", 4566)
-        self.result_list.append("yyy", 4567)
-        self.result_list.append("yyy", 4568)
-        self.result_list.append("yyy", 4569)
-        self.result_list.append("yyy", 4560)
-        self.result_list.append("yyy", 4560)
-        self.result_list.append("yyy", 4561)
-        self.result_list.append("yyy", 4562)
-        self.result_list.append("yyy", 4563)
-        self.result_list.append("yyy", 4564)
-        self.result_list.append("yyy", 4565)
-        self.result_list.append("yyy", 4566)
-        self.result_list.append("yyy", 4567)
-        self.result_list.append("yyy", 4568)
-        self.result_list.append("yyy", 4569)
-        self.result_list.append("yyy", 4560)
 
         self.open_bt = Gtk.Button(label="Select dir")
         self.open_bt.connect("clicked", self.show_open_dialog)
