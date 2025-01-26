@@ -1,6 +1,5 @@
 #!/bin/env python3
 
-import sys
 import gi
 
 gi.require_version('Gtk', '4.0')
@@ -177,6 +176,6 @@ class MyApp(Adw.Application):
         self.win = MainWindow(application=app)
         self.win.present() # показываем это окно
 
-
-app = MyApp()
-app.run(sys.argv)
+def run():  
+    app = MyApp()
+    app.run()
