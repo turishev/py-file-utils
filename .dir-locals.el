@@ -1,4 +1,8 @@
-;; ((nil . ((eval . (progn
-;; 		   (message "dir-locals")
-;; 		   (require 'compile-target)
-;; 		   (load-file "./project-targets.el") t))))))
+((nil . (
+	 (eval . (progn
+		   (message "dir-locals:%s" default-directory)
+		   (compile-target-mode 1)
+		   t))
+	 (compile-target-use-project-el t)
+	 (compile-target-targets-list . ((name "dirsize" cmd "python3 src/dirsize/dirsize.py")))
+	 )))
