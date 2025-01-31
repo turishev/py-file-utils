@@ -1,6 +1,10 @@
-#!/bin/env python3
+from ui import MyApp
+from files import FileSizeCalculator
 
-from ui import run
+def main():
+    worker = FileSizeCalculator()
+    app = MyApp(worker)
+    app.run()
 
 if __name__ == '__main__':
-    run()
+    main()

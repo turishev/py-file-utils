@@ -3,36 +3,50 @@ from os import listdir, walk
 from os.path import isfile, isdir, join, getsize
 
 
-def get_dir_size(root_dir):
-    result_size = 0
-    for curr_dir, subdirs, files in walk(root_dir):
-        print('curr_dir: ' + curr_dir)
-        print("subdirs: " + str(subdirs))
-        print("files: " + str(files))
+class FileSizeCalculator:
+    def __init__(self):
+        self.break_walk = False
 
-        for filename in files:
-            file_path = join(curr_dir, filename)
-            file_size = getsize(file_path)
-            print("%s : %i" % (file_path, file_size))
-            result_size += file_size
+    def _get_dir_size(self, dir):
+        result_size = 0
+        for curr_dir, subdirs, files in walk(dir):
+            if self.break_walk: return result_size
 
-    return result_size
+            for filename in files:
+                file_path = join(curr_dir, filename)
+                file_size = getsize(file_path)
+                # print("%s : %i" % (file_path, file_size))
+                result_size += file_size
 
-def dummy_on_item_cb(item): pass
+        return result_size
 
-def get_dir_sizes_list(root_dir, on_item_cb = dummy_on_item_cb):
-    result = []
-    for file in listdir(root_dir):
-        path = join(root_dir, file)
-        item = ()
-        if (isfile(path)):
-            item = (path, getsize(path), 'f')
-        elif (isdir(path)):
-            item = (path, get_dir_size(path), 'd')
-        else:
-            item = (path, getsize(path), 's')
 
-        result.append(item)
-        on_item_cb(item)
+    def get_dir_size_list(self, root_dir, on_item_cb=None):
+        self.break_walk = False
+        result = []
+        for file in listdir(root_dir):
+            print(file)
+            if not self.break_walk:
+                path = join(root_dir, file)
+                item = ()
+                if (isfile(path)):
+                    item = (path, getsize(path), 'f')
+                elif (isdir(path)):
+                    item = (path, self._get_dir_size(path), 'd')
+                else:
+                    item = (path, getsize(path), 's')
 
-    return result
+                result.append(item)
+                if (on_item_cb != None): on_item_cb(item)
+
+        return result
+
+
+    def stop_calculation(self):
+        self.break_walk = True
+
+def file_size_test():
+     c = FileSizeCalculator()
+     print(c.get_dir_size_list("./"))
+     print(c.get_dir_size_list("./", print))
+

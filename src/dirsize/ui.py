@@ -1,5 +1,4 @@
-#!/bin/env python3
-
+import os
 import gi
 
 gi.require_version('Gtk', '4.0')
@@ -86,10 +85,12 @@ class FileSizeList():
 
 
 class MainWindow(Gtk.ApplicationWindow):
-    app_title = "dir-size"
+    app_title = "dirsize"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.root_dir = os.getcwd()
+
         self.set_default_size(600, 480)
         self.set_title(self.app_title)
 
@@ -162,20 +163,19 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def calculate(self, button):
         print("calculate")
+        res = self.get_application().worker.get_dir_size_list(self.root_dir, print);
+        print(res)
 
     def abort(self, button):
         print("abort")
 
 
 class MyApp(Adw.Application):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, worker):
+        super().__init__()
+        self.worker = worker
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):
         self.win = MainWindow(application=app)
         self.win.present() # показываем это окно
-
-def run():  
-    app = MyApp()
-    app.run()
