@@ -30,11 +30,11 @@ class FileSizeCalculator:
                 path = join(root_dir, file)
                 item = ()
                 if (isfile(path)):
-                    item = (path, getsize(path), 'f')
+                    item = (file, getsize(path), 'f')
                 elif (isdir(path)):
-                    item = (path, self._get_dir_size(path), 'd')
+                    item = (file, self._get_dir_size(path), 'd')
                 else:
-                    item = (path, getsize(path), 's')
+                    item = (file, getsize(path), 's')
 
                 result.append(item)
                 if (on_item_cb != None): on_item_cb(item)

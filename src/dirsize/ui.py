@@ -23,12 +23,12 @@ class FileSizeList():
         self.store = Gio.ListStore.new(DataObject)
 
         factory_c1 = Gtk.SignalListItemFactory()
-        factory_c1.connect("setup", self._setup_c1)
-        factory_c1.connect("bind", self._bind_c1)
+        factory_c1.connect("setup", self.setup_c1)
+        factory_c1.connect("bind", self.bind_c1)
 
         factory_c2 = Gtk.SignalListItemFactory()
-        factory_c2.connect("setup", self._setup_c2)
-        factory_c2.connect("bind", self._bind_c2)
+        factory_c2.connect("setup", self.setup_c2)
+        factory_c2.connect("bind", self.bind_c2)
 
         c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
         c1.set_sorter(Gtk.NumericSorter.new(Gtk.PropertyExpression.new(DataObject, None, "number")))
@@ -44,37 +44,37 @@ class FileSizeList():
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel.new(self.store, sorter)
         self.selection = Gtk.SingleSelection.new(self.sort_model)
-        self.selection.connect("selection-changed", self._on_sel_changed)
+        self.selection.connect("selection-changed", self.on_sel_changed)
 
         self.list_view.set_model(self.selection)
         self.list_view.set_hexpand(True)
+        self.list_view.set_vexpand(True)
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
-        self.list_view.connect ("activate", self._activate_cb);
+        self.list_view.connect ("activate", self.activate_cb);
 
-
-    def _setup_c1(self, factory, item):
+    def setup_c1(self, factory, item):
         label = Gtk.Label()
         label.set_xalign(1.0)
         item.set_child(label)
 
-    def _bind_c1(self, factory, item):
+    def bind_c1(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
         label.set_text(str(obj.number))
 
-    def _setup_c2(self, factory, item):
+    def setup_c2(self, factory, item):
         label = Gtk.Label()
         label.set_xalign(0.0)
         item.set_child(label)
 
-    def _bind_c2(self, factory, item):
+    def bind_c2(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
         label.set_text(obj.text)
 
-    def _activate_cb(self): pass
+    def activate_cb(self): pass
 
-    def _on_sel_changed(self, selection, position, item):
+    def on_sel_changed(self, selection, position, item):
         if item is not None:
             print(f"Selected item: {selection}, {position}, {item}")
         else:
@@ -82,6 +82,9 @@ class FileSizeList():
 
     def append(self, name, size):
         self.store.append(DataObject(name, size))
+
+    def clear(self):
+        self.store.remove_all()
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -92,15 +95,20 @@ class MainWindow(Gtk.ApplicationWindow):
         self.root_dir = os.getcwd()
 
         self.set_default_size(600, 480)
-        self.set_title(self.app_title)
+        self.update_title()
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(self.main_box)
 
-        self.center_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.center_box.set_vexpand(True)
-        self.center_box.set_hexpand(True)
+        self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.main_box.append(self.center_box)
+
+        self.status_label = Gtk.Label()
+        self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.status_box.set_margin_top(8)
+        self.status_box.set_margin_start(8)
+        self.status_box.append(self.status_label)
+        self.main_box.append(self.status_box)
 
         self.bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.bottom_box.set_spacing(10)
@@ -112,13 +120,9 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box.append(self.bottom_box)
 
         self.result_list = FileSizeList()
-
         sw = Gtk.ScrolledWindow()
         self.center_box.append(sw)
         sw.set_child(self.result_list.list_view)
-
-        self.result_list.append("xxx", 123)
-        self.result_list.append("aaa", 456)
 
         self.open_bt = Gtk.Button(label="Select dir")
         self.open_bt.connect("clicked", self.show_open_dialog)
@@ -132,12 +136,15 @@ class MainWindow(Gtk.ApplicationWindow):
         self.abort_bt.connect('clicked', self.abort)
         self.bottom_box.append(self.abort_bt)
 
+        self.close_bt = Gtk.Button(label="Close")
+        self.close_bt.connect('clicked', self.close_app)
+        self.bottom_box.append(self.close_bt)
+
         self.header = Gtk.HeaderBar()
         self.set_titlebar(self.header)
 
         self.open_dialog = Gtk.FileDialog.new()
         self.open_dialog.set_title("Select directory")
-
 
         app = self.get_application()
         sm = app.get_style_manager()
@@ -145,8 +152,7 @@ class MainWindow(Gtk.ApplicationWindow):
         # для стилизации приложения - adwaita
         # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
-
-    def show_open_dialog(self, button):
+    def show_open_dialog(self, _):
         print("open dialog")
         self.open_dialog.select_folder(parent=self, callback=self.open_dialog_open_callback)
 
@@ -157,17 +163,44 @@ class MainWindow(Gtk.ApplicationWindow):
             if dir is not None:
                 self.root_dir = dir.get_path()
                 print(f"dir is {self.root_dir}")
-                self.set_title(self.app_title + ":" + self.root_dir)
+                self.update_title()
         except GLib.Error as error:
             print(f"Error opening file: {error.message}")
 
-    def calculate(self, button):
-        print("calculate")
-        res = self.get_application().worker.get_dir_size_list(self.root_dir, print);
-        print(res)
+    def update_title(self):
+        self.set_title(self.app_title + ":" + self.root_dir)
 
-    def abort(self, button):
+    def set_status(self, text):
+        self.status_label.set_text(text)
+
+    def calculate(self, _):
+        print("calculate")
+        self.set_status("calculation ...")
+        self.result_list.clear()
+        res = self.get_application().worker.get_dir_size_list(self.root_dir,
+                                                              lambda v: self.result_list.append(v[0], v[1]));
+        sum_size = 0
+        for v in res:
+            sum_size += v[1]
+
+        mb = sum_size / 10e+6
+        mbs = ""
+        if mb > 1:
+            if  mb < 1000:
+                mbs = "~" + str(round(mb, 1)) + " Mb"
+            else:
+                mbs = "~" + str(round(mb / 1000, 1)) + " Gb"
+
+        self.set_status("%d bites   %s" % (sum_size, mbs))
+
+    def abort(self, _):
+        self.get_application().worker.stop_calculation()
         print("abort")
+
+    def close_app(self, _):
+        self.get_application().worker.stop_calculation()
+        self.get_application().quit()
+
 
 
 class MyApp(Adw.Application):
