@@ -1,4 +1,4 @@
-from ui import MyApp
+from app import MyApp
 from files import FileSizeCalculator
 
 def main():
