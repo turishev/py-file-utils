@@ -51,15 +51,14 @@ class FileSizeList():
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect("activate", self.activate_cb);
 
-        self.mouse_controller = Gtk.GestureClick.new()
-        self.list_view.add_controller(self.mouse_controller)
-        self.mouse_controller.set_button(3)
-        self.mouse_controller.connect("released", self.on_mouse_right_button_up)
-
     def setup_c1(self, factory, item):
         label = Gtk.Label()
         label.set_xalign(1.0)
         item.set_child(label)
+        click = Gtk.GestureClick.new()
+        click.set_button(3)
+        click.connect("released", self.on_mouse_right_button_up, item)
+        label.add_controller(click)
 
     def bind_c1(self, factory, item):
         label = item.get_child()
@@ -70,6 +69,10 @@ class FileSizeList():
         label = Gtk.Label()
         label.set_xalign(0.0)
         item.set_child(label)
+        click = Gtk.GestureClick.new()
+        click.set_button(3)
+        click.connect("released", self.on_mouse_right_button_up, item)
+        label.add_controller(click)
 
     def bind_c2(self, factory, item):
         label = item.get_child()
@@ -90,6 +93,23 @@ class FileSizeList():
     def clear(self):
         self.store.remove_all()
 
-    def on_mouse_right_button_up(self, press_count, press_x, press_y, user_data):
+    def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int, \
+                                 x : float, y : float, user_data : DataObject):
         print("on_mouse_right_button_up")
-        print(self.selection.get_selected())
+        item = user_data.get_item()
+        found, item_pos = self.store.find(item)
+        print(item_pos)
+        print(found)
+        print(self.store.get_item(item_pos).text)
+        if found:
+            self.selection.select_item(item_pos, True)
+
+
+  #   def on_right_click(event: Gtk.GestureClick,
+  #              n_pres: int,
+  #              x: int,
+  #              y:int)
+
+  # my_widget._menu.set_offset(x, y)
+  # my_widget._menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
+  # my_widget._menu.popup()
