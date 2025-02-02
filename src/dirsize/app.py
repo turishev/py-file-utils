@@ -13,7 +13,9 @@ class MyApp(Adw.Application):
 
     def create_item_actions(self):
         print("create_item_actions")
-        def print_something(action, param):
+        def print_something(action : Gio.SimpleAction , param):
+            print(action)
+            print(param)
             print("Something!")
 
         action = Gio.SimpleAction(name="something")

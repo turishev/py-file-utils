@@ -48,7 +48,7 @@ class FileSizeList():
         self.list_view.set_hexpand(True)
         self.list_view.set_vexpand(True)
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
-        self.list_view.connect("activate", self.activate_cb);
+        self.list_view.connect("activate", self.on_activate);
 
         #self.create_item_actions()
 
@@ -57,10 +57,7 @@ class FileSizeList():
         label = Gtk.Label()
         label.set_xalign(1.0)
         item.set_child(label)
-        click = Gtk.GestureClick.new()
-        click.set_button(3)
-        click.connect("released", self.on_mouse_right_button_up, item)
-        label.add_controller(click)
+        self.connect_menu(label, item)
 
     def bind_c1(self, factory, item):
         label = item.get_child()
@@ -71,17 +68,21 @@ class FileSizeList():
         label = Gtk.Label()
         label.set_xalign(0.0)
         item.set_child(label)
-        click = Gtk.GestureClick.new()
-        click.set_button(3)
-        click.connect("released", self.on_mouse_right_button_up, item)
-        label.add_controller(click)
+        self.connect_menu(label, item)
 
     def bind_c2(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
         label.set_text(obj.text)
 
-    def activate_cb(self): pass
+    def connect_menu(self, widget, item):
+        click = Gtk.GestureClick.new()
+        click.set_button(3)
+        click.connect("pressed", self.on_mouse_right_button_down, item)
+        click.connect("released", self.on_mouse_right_button_up, item)
+        widget.add_controller(click)
+
+    def on_activate(self): pass
 
     def on_sel_changed(self, selection, position, item):
         if item is not None:
@@ -95,12 +96,17 @@ class FileSizeList():
     def clear(self):
         self.store.remove_all()
 
+    def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int, \
+                                   x : float, y : float, cell : Gtk.ColumnViewCell):
+        print("on_mouse_right_button_down")
+        data = cell.get_item()
+        print(data)
+        self.select_item(data)
+
     def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int, \
                                  x : float, y : float, cell : Gtk.ColumnViewCell):
         print("on_mouse_right_button_up")
         data = cell.get_item()
-        print(data)
-        self.select_item(data)
         self.show_item_menu(cell.get_child(), x, y, data)
 
     def select_item(self, item):
@@ -110,17 +116,16 @@ class FileSizeList():
             if model.get_item(i) == item:
                 model.select_item(i, True)
 
-    def create_item_menu(self, widget):
+    def create_item_menu(self, widget, data):
         gmenu = Gio.Menu.new()
         gmenu.append("something", "app.something")
-        gmenu.append("test 2", "test.2")
         menu = Gtk.PopoverMenu.new_from_model(gmenu)
         menu.set_parent(widget)
         return menu
 
     def show_item_menu(self, widget, x, y, data):
         print("show_item_menu")
-        menu = self.create_item_menu(widget)
+        menu = self.create_item_menu(widget, data)
         # menu.set_offset(x, y)
         # menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
         menu.popup()
