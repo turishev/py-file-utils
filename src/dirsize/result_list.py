@@ -1,8 +1,7 @@
-import os
 import gi
 
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
+from gi.repository import Gtk, Gdk, Gio, GObject
 
 
 class DataObject(GObject.GObject):
@@ -51,6 +50,8 @@ class FileSizeList():
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect("activate", self.activate_cb);
 
+        # self.create_item_menu()
+
     def setup_c1(self, factory, item):
         label = Gtk.Label()
         label.set_xalign(1.0)
@@ -94,22 +95,31 @@ class FileSizeList():
         self.store.remove_all()
 
     def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int, \
-                                 x : float, y : float, user_data : DataObject):
+                                 x : float, y : float, cell : Gtk.ColumnViewCell):
         print("on_mouse_right_button_up")
-        item = user_data.get_item()
-        found, item_pos = self.store.find(item)
-        print(item_pos)
-        print(found)
-        print(self.store.get_item(item_pos).text)
-        if found:
-            self.selection.select_item(item_pos, True)
+        data = cell.get_item()
+        print(data)
+        self.select_item(data)
+        self.show_item_menu(cell.get_child(), x, y, data)
 
+    def select_item(self, item):
+        ''' select item in sorted list '''
+        model = self.list_view.get_model()
+        for i in range(self.store.get_n_items()):
+            if model.get_item(i) == item:
+                model.select_item(i, True)
 
-  #   def on_right_click(event: Gtk.GestureClick,
-  #              n_pres: int,
-  #              x: int,
-  #              y:int)
+    def create_item_menu(self, widget):
+        gmenu = Gio.Menu.new()
+        gmenu.append_item(Gio.MenuItem.new("test 1"))
+        gmenu.append_item(Gio.MenuItem.new("test 2"))
+        menu = Gtk.PopoverMenu.new_from_model(gmenu)
+        menu.set_parent(widget)
+        return menu
 
-  # my_widget._menu.set_offset(x, y)
-  # my_widget._menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
-  # my_widget._menu.popup()
+    def show_item_menu(self, widget, x, y, data):
+        print("show_item_menu")
+        menu = self.create_item_menu(widget)
+        menu.set_offset(x, y)
+        menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
+        menu.popup()
