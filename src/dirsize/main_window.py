@@ -62,7 +62,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.header = Gtk.HeaderBar()
         self.set_titlebar(self.header)
 
-        self.open_dialog = Gtk.FileDialog.new()
+        self.open_dialog = Gtk.FileDialog()
         self.open_dialog.set_title("Select directory")
 
         app = self.get_application()

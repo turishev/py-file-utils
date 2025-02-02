@@ -1,7 +1,7 @@
 import gi
 
 gi.require_version('Gtk', '4.0')
-from gi.repository import Gtk, Gdk, Gio, GObject
+from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 
 
 class DataObject(GObject.GObject):
@@ -18,7 +18,7 @@ class DataObject(GObject.GObject):
 
 class FileSizeList():
     def __init__(self):
-        self.store = Gio.ListStore.new(DataObject)
+        self.store = Gio.ListStore(item_type=DataObject)
 
         factory_c1 = Gtk.SignalListItemFactory()
         factory_c1.connect("setup", self.setup_c1)
@@ -28,20 +28,20 @@ class FileSizeList():
         factory_c2.connect("setup", self.setup_c2)
         factory_c2.connect("bind", self.bind_c2)
 
-        c1 = Gtk.ColumnViewColumn.new("size", factory_c1)
-        c1.set_sorter(Gtk.NumericSorter.new(Gtk.PropertyExpression.new(DataObject, None, "number")))
+        c1 = Gtk.ColumnViewColumn(title="size", factory=factory_c1)
+        c1.set_sorter(Gtk.NumericSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "number")))
 
-        c2 = Gtk.ColumnViewColumn.new("name", factory_c2)
-        c2.set_sorter(Gtk.StringSorter.new(Gtk.PropertyExpression.new(DataObject, None, "text")))
+        c2 = Gtk.ColumnViewColumn(title="name", factory=factory_c2)
+        c2.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "text")))
         c2.set_expand(True);
 
-        self.list_view = Gtk.ColumnView.new()
+        self.list_view = Gtk.ColumnView()
         self.list_view.append_column(c1)
         self.list_view.append_column(c2)
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
-        self.sort_model = Gtk.SortListModel.new(self.store, sorter)
-        self.selection = Gtk.SingleSelection.new(self.sort_model)
+        self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
+        self.selection = Gtk.SingleSelection(model=self.sort_model)
         self.selection.connect("selection-changed", self.on_sel_changed)
 
         self.list_view.set_model(self.selection)
@@ -50,7 +50,7 @@ class FileSizeList():
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect("activate", self.on_activate);
 
-        #self.create_item_actions()
+        self.create_actions()
 
 
     def setup_c1(self, factory, item):
@@ -76,7 +76,7 @@ class FileSizeList():
         label.set_text(obj.text)
 
     def connect_menu(self, widget, item):
-        click = Gtk.GestureClick.new()
+        click = Gtk.GestureClick()
         click.set_button(3)
         click.connect("pressed", self.on_mouse_right_button_down, item)
         click.connect("released", self.on_mouse_right_button_up, item)
@@ -110,15 +110,22 @@ class FileSizeList():
         self.show_item_menu(cell.get_child(), x, y, data)
 
     def select_item(self, item):
-        ''' select item in the SORTED list '''
-        model = self.list_view.get_model()
-        for i in range(self.store.get_n_items()):
+        model = self.selection
+        for i in range(model.get_n_items()):
             if model.get_item(i) == item:
                 model.select_item(i, True)
 
+    def delete_item(self, item):
+        print("delete_item: %s" % item.text)
+        model = self.store
+        for i in range(model.get_n_items()):
+            if model.get_item(i) == item:
+                model.remove(i)
+                break
+                
     def create_item_menu(self, widget, data):
-        gmenu = Gio.Menu.new()
-        gmenu.append("something", "app.something")
+        gmenu = Gio.Menu()
+        gmenu.append("Delete", "file-list.delete-file")
         menu = Gtk.PopoverMenu.new_from_model(gmenu)
         menu.set_parent(widget)
         return menu
@@ -126,22 +133,27 @@ class FileSizeList():
     def show_item_menu(self, widget, x, y, data):
         print("show_item_menu")
         menu = self.create_item_menu(widget, data)
-        # menu.set_offset(x, y)
-        # menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
+        menu.set_offset(x, y)
+        menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
         menu.popup()
 
-    # def create_item_actions(self):
-    #     print("create_item_actions")
-    #     def print_something(self, action, param):
-    #         print("Something!")
+    def get_selected_item(self):
+        model = self.selection
+        sel_inx = model.get_selected()
+        return model.get_item(sel_inx)
 
-    #     action = Gio.SimpleAction.new("something", None)
-    #     action.connect("activate", print_something)
-    #     act = self.list_view.insert_action_group("list_actions")
-    #     print(act)
-    #     self.list_view.add_action(action)
-    #     # Here the action is being added to the window, but you could add it to the
-    #     # application or an "ActionGroup"
+        
+    def delete_act_handler(self, action, param):
+        print("delete_act_handler")
+        item = self.get_selected_item()
+        name = item.text
+        print("file:" + name)
+        self.delete_item(item)
 
-    def delete_item(self):
-        print("delete_item")
+    def create_actions(self):
+        print("create_actions")
+        delete_act = Gio.SimpleAction(name="delete-file")
+        delete_act.connect("activate", self.delete_act_handler)
+        action_group = Gio.SimpleActionGroup()
+        action_group.add_action(delete_act)
+        self.list_view.insert_action_group('file-list', action_group)
