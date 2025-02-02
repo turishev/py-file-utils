@@ -50,7 +50,8 @@ class FileSizeList():
         self.list_view.sort_by_column(c1, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect("activate", self.activate_cb);
 
-        # self.create_item_menu()
+        #self.create_item_actions()
+
 
     def setup_c1(self, factory, item):
         label = Gtk.Label()
@@ -103,7 +104,7 @@ class FileSizeList():
         self.show_item_menu(cell.get_child(), x, y, data)
 
     def select_item(self, item):
-        ''' select item in sorted list '''
+        ''' select item in the SORTED list '''
         model = self.list_view.get_model()
         for i in range(self.store.get_n_items()):
             if model.get_item(i) == item:
@@ -111,8 +112,8 @@ class FileSizeList():
 
     def create_item_menu(self, widget):
         gmenu = Gio.Menu.new()
-        gmenu.append_item(Gio.MenuItem.new("test 1"))
-        gmenu.append_item(Gio.MenuItem.new("test 2"))
+        gmenu.append("something", "app.something")
+        gmenu.append("test 2", "test.2")
         menu = Gtk.PopoverMenu.new_from_model(gmenu)
         menu.set_parent(widget)
         return menu
@@ -120,6 +121,22 @@ class FileSizeList():
     def show_item_menu(self, widget, x, y, data):
         print("show_item_menu")
         menu = self.create_item_menu(widget)
-        menu.set_offset(x, y)
-        menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
+        # menu.set_offset(x, y)
+        # menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
         menu.popup()
+
+    # def create_item_actions(self):
+    #     print("create_item_actions")
+    #     def print_something(self, action, param):
+    #         print("Something!")
+
+    #     action = Gio.SimpleAction.new("something", None)
+    #     action.connect("activate", print_something)
+    #     act = self.list_view.insert_action_group("list_actions")
+    #     print(act)
+    #     self.list_view.add_action(action)
+    #     # Here the action is being added to the window, but you could add it to the
+    #     # application or an "ActionGroup"
+
+    def delete_item(self):
+        print("delete_item")
