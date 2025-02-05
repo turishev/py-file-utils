@@ -3,21 +3,21 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Adw, Gio, GLib
 from main_window import MainWindow
-
+from actions import AppActions
 
 class MyApp(Adw.Application):
-    def __init__(self, worker):
+    def __init__(self, file_ops, script_file, auto_run):
         super().__init__()
-        self.worker = worker
-        self.connect('activate', self.on_activate)
+        self.file_ops = file_ops
+        self.script_file = script_file
+        self.connect('activate', self.on_activate, auto_run)
 
-    def create_actions(self):
-        quit_act = Gio.SimpleAction(name='quit')
-        quit_act.connect('activate', lambda *args: self.win.destroy())
-        self.add_action(quit_act)
-        self.set_accels_for_action("app.quit", ["<Ctrl>q"])
-
-    def on_activate(self, app):
+    def on_activate(self, app, auto_run):
+        print('app: on_activate')
         self.win = MainWindow(application=app)
-        self.create_actions()
+        self.win.set_root_dir(str(self.file_ops.root_dir))
+        self.actions = AppActions(self.win, self.file_ops, self.script_file)
+        self.actions.register_actions(self)
         self.win.present()
+        if auto_run:
+            self.actions.calculate_act_handler()
