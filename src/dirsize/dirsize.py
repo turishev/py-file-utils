@@ -1,8 +1,8 @@
 from app import MyApp
-from files import FileSizeCalculator
+from files import FileOps
 
 def main():
-    worker = FileSizeCalculator()
+    worker = FileOps()
     app = MyApp(worker)
     app.run()
 
