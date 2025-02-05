@@ -1,9 +1,11 @@
 from pathlib import Path
+from shutil import rmtree;
 
 
-class FileSizeCalculator:
+class FileOps:
     def __init__(self):
         self.break_walk = False
+        self.root_dir = None
 
     def _get_dir_size(self, dir):
         result_size = 0
@@ -18,8 +20,10 @@ class FileSizeCalculator:
 
 
     def get_dir_size_list(self, root_dir, on_item_cb=None):
+        self.root_dir = Path(root_dir)
         self.break_walk = False
         result = []
+
         for file in Path(root_dir).iterdir():
             # print(file)
             if not self.break_walk:
@@ -37,12 +41,18 @@ class FileSizeCalculator:
 
         return result
 
-
     def stop_calculation(self):
         self.break_walk = True
 
+    def delete(self, file_name):
+        if self.root_dir != None:
+            file = self.root_dir / file_name
+            rmtree(file)
+
+        
+        
 def file_size_test():
-     c = FileSizeCalculator()
+     c = FileOps()
      print(c.get_dir_size_list("./"))
      print(c.get_dir_size_list("./", print))
 
