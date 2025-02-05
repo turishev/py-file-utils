@@ -1,6 +1,4 @@
-import sys
-from os import listdir, walk
-from os.path import isfile, isdir, join, getsize
+from pathlib import Path
 
 
 class FileSizeCalculator:
@@ -9,14 +7,12 @@ class FileSizeCalculator:
 
     def _get_dir_size(self, dir):
         result_size = 0
-        for curr_dir, subdirs, files in walk(dir):
+        for curr_dir, _, files in Path.walk(dir):
             if self.break_walk: return result_size
-
+            # print(curr_dir);
+            dir = Path(curr_dir)
             for filename in files:
-                file_path = join(curr_dir, filename)
-                file_size = getsize(file_path)
-                # print("%s : %i" % (file_path, file_size))
-                result_size += file_size
+                result_size += (dir / filename).stat().st_size
 
         return result_size
 
@@ -24,18 +20,18 @@ class FileSizeCalculator:
     def get_dir_size_list(self, root_dir, on_item_cb=None):
         self.break_walk = False
         result = []
-        for file in listdir(root_dir):
-            print(file)
+        for file in Path(root_dir).iterdir():
+            # print(file)
             if not self.break_walk:
-                path = join(root_dir, file)
                 item = ()
-                if (isfile(path)):
-                    item = (file, getsize(path), 'f')
-                elif (isdir(path)):
-                    item = (file, self._get_dir_size(path), 'd')
+                if (file.is_file()):
+                    item = (file.name, file.stat().st_size, 'f')
+                elif (file.is_dir()):
+                    item = (file.name, self._get_dir_size(file), 'd')
                 else:
-                    item = (file, getsize(path), 's')
+                    item = (file.name, file.stat().st_size, 's')
 
+                print(item)
                 result.append(item)
                 if (on_item_cb != None): on_item_cb(item)
 
