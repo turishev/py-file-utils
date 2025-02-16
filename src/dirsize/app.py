@@ -20,4 +20,4 @@ class MyApp(Adw.Application):
         self.actions.register_actions(self)
         self.win.present()
         if auto_run:
-            self.actions.calculate_act_handler()
+            self.actions.calculate_handler()
