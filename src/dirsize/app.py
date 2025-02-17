@@ -1,14 +1,22 @@
+import os
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Adw, Gio, GLib
 from main_window import MainWindow
 from actions import AppActions
+from files import FileOps
 
 class MyApp(Adw.Application):
-    def __init__(self, file_ops, script_file, auto_run):
+    def __init__(self, script_file, root_dir):
         super().__init__()
-        self.file_ops = file_ops
+        auto_run = False
+        if root_dir is None:
+            root_dir = os.getcwd()
+        else:
+            auto_run = True
+
+        self.file_ops = FileOps(root_dir)
         self.script_file = script_file
         self.connect('activate', self.on_activate, auto_run)
 
