@@ -1,5 +1,5 @@
 from pathlib import Path
-from shutil import rmtree;
+from shutil import rmtree
 
 
 class FileOps:
@@ -10,30 +10,38 @@ class FileOps:
         if not self.root_dir.is_dir():
             self.root_dir = Path.cwd().absolute()
 
-
-
     def set_error_handler(self, error_handler):
         self.eror_handler = error_handler
 
+    def get_root_dir(self):
+        return str(self.root_dir)
+
+    def set_root_dir(self, dir):
+        self.root_dir = Path(dir)
 
     def _get_dir_size(self, dir):
         result_size = 0
-        for curr_dir, _, files in Path.walk(dir):
+        for curr_dir, dirs, files in Path.walk(dir):
             if self.break_walk: return result_size
             # print(curr_dir);
+
             dir = Path(curr_dir)
-            for filename in files:
-                result_size += (dir / filename).stat().st_size
+            for f in files:
+                path = (dir / f)
+                if path.is_file():
+                    result_size += path.stat().st_size
+
+            for d in dirs:
+                result_size += self._get_dir_size(dir / d)
 
         return result_size
 
 
-    def get_dir_size_list(self, root_dir, on_item_cb=None):
-        self.root_dir = Path(root_dir)
+    def get_dir_size_list(self, on_item_cb=None):
         self.break_walk = False
         result = []
 
-        for file in Path(root_dir).iterdir():
+        for file in Path(self.root_dir).iterdir():
             # print(file)
             if not self.break_walk:
                 item = ()

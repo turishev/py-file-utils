@@ -105,9 +105,11 @@ class FileSizeList():
 
     def on_sel_changed(self, selection, position, item):
         if item is not None:
-            print(f"Selected item: {selection}, {position}, {item}")
+            #print(f"Selected item: {selection}, {position}, {item}")
+            pass
         else:
-            print("No item selected")
+            #print("No item selected")
+            pass
 
     def append(self, name, type, size):
         self.store.append(DataObject(name, type, size))
@@ -117,14 +119,14 @@ class FileSizeList():
 
     def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int, \
                                    x : float, y : float, cell : Gtk.ColumnViewCell):
-        print("on_mouse_right_button_down")
+        # print("on_mouse_right_button_down")
         data = cell.get_item()
         print(data)
         self.select_item(data)
 
     def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int, \
                                  x : float, y : float, cell : Gtk.ColumnViewCell):
-        print("on_mouse_right_button_up")
+        # print("on_mouse_right_button_up")
         data = cell.get_item()
         self.show_item_menu(cell.get_child(), x, y, data)
 

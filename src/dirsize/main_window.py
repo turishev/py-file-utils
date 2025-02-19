@@ -12,7 +12,7 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
         self.root_dir = None
         self.set_default_size(600, 480)
-        self.update_title()
+        self.update_title(None)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(self.main_box)
@@ -67,15 +67,14 @@ class MainWindow(Gtk.ApplicationWindow):
         # для стилизации приложения - adwaita
         # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
-    def update_title(self):
-        if self.root_dir is None:
+    def update_title(self, dir):
+        if dir is None:
             self.set_title(self.app_title)
         else:
-            self.set_title(self.app_title + ": " + self.root_dir)
+            self.set_title(self.app_title + ": " + dir)
 
     def set_root_dir(self, dir):
-        self.root_dir = dir
-        self.update_title()
+        self.update_title(dir)
 
     def set_status(self, text):
         self.status_label.set_text(text)

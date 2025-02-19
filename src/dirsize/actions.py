@@ -39,11 +39,18 @@ class AppActions:
 
 
     def calculate_handler(self):
-        self.win.set_status("calculation ...")
+        self.win.set_status("Calculating ...")
         self.win.result_list.clear()
-        res = self.file_ops.get_dir_size_list(self.win.root_dir,
-                                              lambda v: self.win.result_list.append(v[0], v[2], v[1]));
         sum_size = 0
+
+        def _add_new_item(type, name, size):
+            self.win.result_list.append(type, size, name)
+
+            while GLib.MainContext.default().pending():
+                GLib.MainContext.default().iteration(False)
+
+        res = self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v))
+
         for v in res:
             sum_size += v[1]
 
@@ -101,4 +108,10 @@ class AppActions:
                             do_delete)
 
     def open_dir_handler(self):
-        show_open_dir_dialog(self.win, lambda dir: self.win.set_root_dir(dir))
+        def on_select_dir(dir):
+            self.file_ops.set_root_dir(dir)
+            self.win.set_root_dir(dir)
+
+        show_open_dir_dialog(self.win,
+                             self.file_ops.get_root_dir(),
+                             on_select_dir)
