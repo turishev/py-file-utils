@@ -21,6 +21,10 @@ class AppActions:
             ]
 
 
+    def _update_ui(self):
+        while GLib.MainContext.default().pending():
+            GLib.MainContext.default().iteration(False)
+
     def register_actions(self, app):
         def _create_act(name, keys, fn):
             # we need pass name, keys, fn as values into a separate function
@@ -45,11 +49,9 @@ class AppActions:
 
         def _add_new_item(type, name, size):
             self.win.result_list.append(type, size, name)
+            self._update_ui()
 
-            while GLib.MainContext.default().pending():
-                GLib.MainContext.default().iteration(False)
-
-        res = self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v))
+        res = self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
 
         for v in res:
             sum_size += v[1]

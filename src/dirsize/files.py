@@ -19,7 +19,7 @@ class FileOps:
     def set_root_dir(self, dir):
         self.root_dir = Path(dir)
 
-    def _get_dir_size(self, dir):
+    def _get_dir_size(self, dir, on_iter_cb):
         result_size = 0
         for curr_dir, dirs, files in Path.walk(dir):
             if self.break_walk: return result_size
@@ -28,16 +28,18 @@ class FileOps:
             dir = Path(curr_dir)
             for f in files:
                 path = (dir / f)
-                if path.is_file():
-                    result_size += path.stat().st_size
+                if path.is_file() and not path.is_symlink():
+                    result_size += path.stat(follow_symlinks=False).st_size
+                    if (not on_iter_cb is None):
+                        on_iter_cb()
 
             for d in dirs:
-                result_size += self._get_dir_size(dir / d)
+                result_size += self._get_dir_size(dir / d, on_iter_cb)
 
         return result_size
 
 
-    def get_dir_size_list(self, on_item_cb=None):
+    def get_dir_size_list(self, on_item_cb=None, on_iter_cb=None):
         self.break_walk = False
         result = []
 
@@ -45,12 +47,13 @@ class FileOps:
             # print(file)
             if not self.break_walk:
                 item = ()
-                if (file.is_file()):
-                    item = (file.name, file.stat().st_size, 'F')
-                elif (file.is_dir()):
-                    item = (file.name, self._get_dir_size(file), 'D')
+                if (file.is_file() and not file.is_symlink()):
+                    item = (file.name, file.stat(follow_symlinks=False).st_size, 'F')
+                elif (file.is_dir() and not file.is_symlink()):
+                    print(file)
+                    item = (file.name, self._get_dir_size(file, on_iter_cb), 'D')
                 else:
-                    item = (file.name, file.stat().st_size, '*')
+                    item = (file.name, file.stat(follow_symlinks=False).st_size, '*')
 
                 print(item)
                 result.append(item)
