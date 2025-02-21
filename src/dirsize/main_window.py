@@ -68,10 +68,8 @@ class MainWindow(Gtk.ApplicationWindow):
         # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
     def update_title(self, dir):
-        if dir is None:
-            self.set_title(self.app_title)
-        else:
-            self.set_title(self.app_title + ": " + dir)
+        title = self.app_title if dir is None else self.app_title + ": " + dir
+        self.set_title(title)
 
     def set_root_dir(self, dir):
         self.update_title(dir)

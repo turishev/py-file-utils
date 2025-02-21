@@ -56,14 +56,20 @@ class AppActions:
         for v in res:
             sum_size += v[1]
 
+        size_bounds = [(1024**3, 'Gb'),
+                       (1024**2, 'Mb'),
+                       (1024, 'kb'),
+                       (0, '')]
+
         sums = ""
 
-        if sum_size > 10e9:
-            sums = f'~ {round(sum_size / 10e9, 1)} Gb'
-        elif sum_size > 10e6:
-            sums = f'~ {round(sum_size / 10e6, 1)} Mb'
-        elif sum_size > 10e3:
-            sums = f'~ {round(sum_size / 10e3, 1)} kb'
+        for i in range(len(size_bounds) - 1):
+            delim = size_bounds[i][0]
+            sign = size_bounds[i][1]
+
+            if sum_size >= delim:
+                sums = f'~ {round(sum_size / delim, 1)} {sign}'
+                break
 
         self.win.set_status("%d  bites    %s" % (sum_size, sums))
 
@@ -114,6 +120,8 @@ class AppActions:
         def on_select_dir(dir):
             self.file_ops.set_root_dir(dir)
             self.win.set_root_dir(dir)
+            self.win.result_list.clear()
+            self.calculate_handler()
 
         show_open_dir_dialog(self.win,
                              self.file_ops.get_root_dir(),

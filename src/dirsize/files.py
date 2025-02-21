@@ -20,21 +20,15 @@ class FileOps:
         self.root_dir = Path(dir)
 
     def _get_dir_size(self, dir, on_iter_cb):
-        result_size = 0
-        for curr_dir, dirs, files in Path.walk(dir):
+        result_size = Path(dir).stat(follow_symlinks=False).st_size
+        for curr_dir, dirs, files in Path.walk(dir, follow_symlinks=False):
+            if (not on_iter_cb is None): on_iter_cb()
             if self.break_walk: return result_size
-            # print(curr_dir);
 
             dir = Path(curr_dir)
-            for f in files:
+            for f in files + dirs:
                 path = (dir / f)
-                if path.is_file() and not path.is_symlink():
-                    result_size += path.stat(follow_symlinks=False).st_size
-                    if (not on_iter_cb is None):
-                        on_iter_cb()
-
-            for d in dirs:
-                result_size += self._get_dir_size(dir / d, on_iter_cb)
+                result_size += self.file_size(path)
 
         return result_size
 
@@ -42,23 +36,30 @@ class FileOps:
     def get_dir_size_list(self, on_item_cb=None, on_iter_cb=None):
         self.break_walk = False
         result = []
+        try:
+            dir = Path(self.root_dir)
+            result.append(('.', self.file_size(dir), 'D'))
+            # add root_dir size without files
 
-        for file in Path(self.root_dir).iterdir():
-            # print(file)
-            if not self.break_walk:
-                item = ()
-                if (file.is_file() and not file.is_symlink()):
-                    item = (file.name, file.stat(follow_symlinks=False).st_size, 'F')
-                elif (file.is_dir() and not file.is_symlink()):
-                    print(file)
-                    item = (file.name, self._get_dir_size(file, on_iter_cb), 'D')
-                else:
-                    item = (file.name, file.stat(follow_symlinks=False).st_size, '*')
+            for file in dir.iterdir():
+                if self.break_walk: return result
 
-                print(item)
-                result.append(item)
-                if (on_item_cb != None): on_item_cb(item)
+                try:
+                    if file.is_file():
+                        item = (file.name, self.file_size(file), 'F')
+                    elif file.is_dir():
+                        item = (file.name, self._get_dir_size(file, on_iter_cb), 'D')
+                    else:
+                        item = (file.name, self.file_size(file), '*')
 
+                    result.append(item)
+                    if (on_item_cb != None): on_item_cb(item)
+
+                except Exception as e:
+                    print(f'error on check {file.name}')
+
+        except Exception as e:
+            print(f'error on check {self.root_dir}')
         return result
 
     def stop_calculation(self):
@@ -90,3 +91,11 @@ class FileOps:
     @staticmethod
     def abs_path(file_name):
         return str(Path(file_name).absolute())
+
+    @staticmethod
+    def file_size(file):
+        if file.exists(follow_symlinks=False):
+            return file.stat(follow_symlinks=False).st_size
+        else:
+            print(f'file {file} doesn\'t exist')
+            return 0

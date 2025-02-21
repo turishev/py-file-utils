@@ -4,11 +4,7 @@ from app import MyApp
 
 def main(args):
     print("args:" + str(args))
-    if (len(args) > 1):
-        root_dir = args[1]
-    else:
-        root_dir = None
-
+    root_dir = args[1] if (len(args) > 1) else None
     app = MyApp(__file__, root_dir)
     app.run()
 
