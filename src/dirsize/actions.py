@@ -56,15 +56,16 @@ class AppActions:
         for v in res:
             sum_size += v[1]
 
-        mb = sum_size / 10e+6
-        mbs = ""
-        if mb > 1:
-            if  mb < 1000:
-                mbs = "~" + str(round(mb, 1)) + " Mb"
-            else:
-                mbs = "~" + str(round(mb / 1000, 1)) + " Gb"
+        sums = ""
 
-        self.win.set_status("%d bites   %s" % (sum_size, mbs))
+        if sum_size > 10e9:
+            sums = f'~ {round(sum_size / 10e9, 1)} Gb'
+        elif sum_size > 10e6:
+            sums = f'~ {round(sum_size / 10e6, 1)} Mb'
+        elif sum_size > 10e3:
+            sums = f'~ {round(sum_size / 10e3, 1)} kb'
+
+        self.win.set_status("%d  bites    %s" % (sum_size, sums))
 
 
     def break_calculation_handler(self):
