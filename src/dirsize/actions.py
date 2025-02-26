@@ -1,3 +1,5 @@
+import enum
+
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
@@ -5,8 +7,13 @@ from gi.repository import Gio, GLib, Gtk
 from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_confirm_dialog, show_open_dir_dialog
 
+class ActionStatus(enum.Enum):
+    WAIT = 0
+    RUN = 1
+
 class AppActions:
     def __init__(self, win, file_ops, script_file):
+        self.status = ActionStatus.WAIT
         self.win = win
         self.file_ops = file_ops
         self.script_file = script_file
@@ -43,20 +50,21 @@ class AppActions:
 
 
     def calculate_handler(self):
+        if self.status == ActionStatus.RUN: return
+        self.status = ActionStatus.RUN
         self.win.start_calculation()
         self.win.set_status("Calculating ...")
 
-
         sum_size = 0
 
-        def _add_new_item(type, name, size):
-            self.win.result_list.append(type, size, name)
+        def _add_new_item(name, size, type):
+            nonlocal sum_size
+            sum_size += size
+            self.win.result_list.append(name, type, size)
+            self.win.set_status("Calculating ... %d  bites" % sum_size)
             self._update_ui()
 
-        res = self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
-
-        for v in res:
-            sum_size += v[1]
+        self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
 
         size_bounds = [(1024**3, 'Gb'),
                        (1024**2, 'Mb'),
@@ -75,18 +83,23 @@ class AppActions:
 
         self.win.set_status("%d  bites    %s" % (sum_size, sums))
         self.win.stop_calculation()
+        self.status = ActionStatus.WAIT
 
 
     def break_calculation_handler(self):
         print('stop_calculation_handler')
+        if not self.status == ActionStatus.RUN: return
         self.file_ops.stop_calculation()
-        self.win.set_status("calculation aborted")
+        self.win.set_status("Calculation aborted")
+        self.status = ActionStatus.WAIT
 
 
     def dirsize_handler(self):
+        if self.status == ActionStatus.RUN: return
         result_list = self.win.result_list
         file_name = result_list.get_selected_name()
         path = self.file_ops.file_path(file_name)
+
         Popen(['python3', self.script_file, path],
               start_new_session=True,
               close_fds=True,
@@ -95,9 +108,11 @@ class AppActions:
 
 
     def open_handler(self):
+        if self.status == ActionStatus.RUN: return
         result_list = self.win.result_list
         file_name = result_list.get_selected_name()
         path = self.file_ops.file_path(file_name)
+
         Popen(['xdg-open', path],
               start_new_session=True,
               close_fds=True,
@@ -106,6 +121,7 @@ class AppActions:
 
 
     def delete_handler(self):
+        if self.status == ActionStatus.RUN: return
         result_list = self.win.result_list
         file_name = result_list.get_selected_name()
         print("delete:"  +  file_name)
@@ -120,6 +136,8 @@ class AppActions:
                             do_delete)
 
     def open_dir_handler(self):
+        if self.status == ActionStatus.RUN: return
+
         def on_select_dir(dir):
             self.file_ops.set_root_dir(dir)
             self.win.set_root_dir(dir)

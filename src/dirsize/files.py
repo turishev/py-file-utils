@@ -56,10 +56,10 @@ class FileOps:
                     if (on_item_cb != None): on_item_cb(item)
 
                 except Exception as e:
-                    print(f'error on check {file.name}')
+                    print(f'Error on check file or dir "{file.name}":{e}')
 
         except Exception as e:
-            print(f'error on check {self.root_dir}')
+            print(f'Error 2 on check dir "{self.root_dir}":{e}')
         return result
 
     def stop_calculation(self):
