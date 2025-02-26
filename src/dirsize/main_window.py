@@ -51,7 +51,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bottom_box.append(self.calc_bt)
 
         self.abort_bt = Gtk.Button(label="Abort")
-        self.abort_bt.set_action_name("app.break-calculation")
+        #self.abort_bt.set_action_name("app.break-calculation") # doesn't work here with set_sensitive(False)
+        self.abort_bt.set_sensitive(False);
         self.bottom_box.append(self.abort_bt)
 
         self.close_bt = Gtk.Button(label="Close")
@@ -76,3 +77,16 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def set_status(self, text):
         self.status_label.set_text(text)
+
+    def start_calculation(self):
+        self.calc_bt.set_sensitive(False);
+        self.abort_bt.set_sensitive(True);
+        self.open_bt.set_sensitive(False);
+        self.abort_bt.set_action_name("app.break-calculation")
+        # we need it this here due to it doesn't work in __init__ 
+        self.result_list.clear()
+
+    def stop_calculation(self):
+        self.calc_bt.set_sensitive(True);
+        self.abort_bt.set_sensitive(False);
+        self.open_bt.set_sensitive(True);

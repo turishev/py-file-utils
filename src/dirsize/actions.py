@@ -43,8 +43,10 @@ class AppActions:
 
 
     def calculate_handler(self):
+        self.win.start_calculation()
         self.win.set_status("Calculating ...")
-        self.win.result_list.clear()
+
+
         sum_size = 0
 
         def _add_new_item(type, name, size):
@@ -72,6 +74,7 @@ class AppActions:
                 break
 
         self.win.set_status("%d  bites    %s" % (sum_size, sums))
+        self.win.stop_calculation()
 
 
     def break_calculation_handler(self):
