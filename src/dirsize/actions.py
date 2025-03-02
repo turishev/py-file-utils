@@ -7,6 +7,8 @@ from gi.repository import Gio, GLib, Gtk
 from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_confirm_dialog, show_open_dir_dialog
 
+import utils
+
 class ActionStatus(enum.Enum):
     WAIT = 0
     RUN = 1
@@ -53,15 +55,19 @@ class AppActions:
         if self.status == ActionStatus.RUN: return
         self.status = ActionStatus.RUN
         self.win.start_calculation()
-        self.win.set_status("Calculating ...")
 
         sum_size = 0
+
+        def set_status(sz):
+            self.win.set_status(f"Calculating ... {utils.format_size(sz)}  bites")
+
+        set_status(0)
 
         def _add_new_item(name, size, type):
             nonlocal sum_size
             sum_size += size
             self.win.result_list.append(name, type, size)
-            self.win.set_status("Calculating ... %d  bites" % sum_size)
+            set_status(sum_size)
             self._update_ui()
 
         self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
@@ -81,7 +87,7 @@ class AppActions:
                 sums = f'~ {round(sum_size / delim, 1)} {sign}'
                 break
 
-        self.win.set_status("%d  bites    %s" % (sum_size, sums))
+        self.win.set_status("%s  bites    %s" % (utils.format_size(sum_size), sums))
         self.win.stop_calculation()
         self.status = ActionStatus.WAIT
 

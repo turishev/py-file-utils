@@ -3,6 +3,7 @@ import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 
+import utils
 
 class DataObject(GObject.GObject):
     __gtype_name__ = 'DataObject'
@@ -81,7 +82,7 @@ class FileSizeList():
     def bind_size_column(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
-        label.set_text(str(obj.size))
+        label.set_text(utils.format_size(obj.size))
 
     def setup_name_column(self, factory, item):
         label = Gtk.Label()
@@ -179,3 +180,4 @@ class FileSizeList():
         item = self.get_selected_item()
         print("file:" + item.name)
         self.delete_item(item)
+
