@@ -34,20 +34,20 @@ class FileSizeList():
         factory_name_column.connect("setup", self.setup_name_column)
         factory_name_column.connect("bind", self.bind_name_column)
 
-        type_column = Gtk.ColumnViewColumn(title="type", factory=factory_type_column)
-        type_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "type")))
+        self.type_column = Gtk.ColumnViewColumn(title="type", factory=factory_type_column)
+        self.type_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "type")))
 
-        size_column = Gtk.ColumnViewColumn(title="size", factory=factory_size_column)
-        size_column.set_sorter(Gtk.NumericSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "size")))
+        self.size_column = Gtk.ColumnViewColumn(title="size", factory=factory_size_column)
+        self.size_column.set_sorter(Gtk.NumericSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "size")))
 
-        name_column = Gtk.ColumnViewColumn(title="name", factory=factory_name_column)
-        name_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "name")))
-        name_column.set_expand(True);
+        self.name_column = Gtk.ColumnViewColumn(title="name", factory=factory_name_column)
+        self.name_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "name")))
+        self.name_column.set_expand(True);
 
         self.list_view = Gtk.ColumnView()
-        self.list_view.append_column(type_column)
-        self.list_view.append_column(size_column)
-        self.list_view.append_column(name_column)
+        self.list_view.append_column(self.type_column)
+        self.list_view.append_column(self.size_column)
+        self.list_view.append_column(self.name_column)
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
@@ -57,7 +57,7 @@ class FileSizeList():
         self.list_view.set_model(self.selection)
         self.list_view.set_hexpand(True)
         self.list_view.set_vexpand(True)
-        self.list_view.sort_by_column(size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
+        self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
         self.list_view.connect("activate", self.on_activate);
 
 
@@ -113,18 +113,23 @@ class FileSizeList():
 
     def append(self, name, type, size):
         self.store.append(DataObject(name, type, size))
+        # model = self.selection
+        # model.select_item(0, True)
+        self.list_view.scroll_to(0,
+                                 self.name_column,
+                                 flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
 
     def clear(self):
         self.store.remove_all()
 
-    def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int, \
+    def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
                                    x : float, y : float, cell : Gtk.ColumnViewCell):
         # print("on_mouse_right_button_down")
         data = cell.get_item()
         print(data)
         self.select_item(data)
 
-    def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int, \
+    def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int,
                                  x : float, y : float, cell : Gtk.ColumnViewCell):
         # print("on_mouse_right_button_up")
         data = cell.get_item()
