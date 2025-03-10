@@ -6,7 +6,7 @@ gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib, Gtk
 from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_confirm_dialog, show_open_dir_dialog
-
+from shortcuts import shortcuts;
 import utils
 
 class ActionStatus(enum.Enum):
@@ -20,13 +20,13 @@ class AppActions:
         self.file_ops = file_ops
         self.script_file = script_file
         self.actions = [
-            ('quit', ['<Ctrl>q'], self.quit_handler),
-            ('calculate-sizes', ['space'], self.calculate_handler),
-            ('delete-selected-file', ['Delete'], self.delete_handler),
-            ('break-calculation', ['<Ctrl>c'], self.break_calculation_handler),
-            ('dirsize-selected-file', ['<Ctrl>space'], self.dirsize_handler),
-            ('open-selected-file', ['<Ctrl>f'], self.open_handler),
-            ('open-dir', ['<Ctrl>o'], self.open_dir_handler),
+            ('quit', self.quit_handler),
+            ('calculate-sizes', self.calculate_handler),
+            ('delete-selected-file', self.delete_handler),
+            ('break-calculation', self.break_calculation_handler),
+            ('dirsize-selected-file', self.dirsize_handler),
+            ('open-selected-file', self.open_handler),
+            ('open-dir', self.open_dir_handler),
             ]
 
 
@@ -43,7 +43,9 @@ class AppActions:
             app.add_action(act)
             app.set_accels_for_action("app.%s" % name, keys)
 
-        for a in self.actions: _create_act(*a)
+        for act, handler in self.actions:
+            key = shortcuts[act]
+            _create_act(act, [key], handler)
 
 
     def quit_handler(self):

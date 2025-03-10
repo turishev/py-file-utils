@@ -4,6 +4,8 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
 
+from shortcuts import shortcuts;
+
 
 class MainWindow(Gtk.ApplicationWindow):
     app_title = "dirsize"
@@ -42,21 +44,17 @@ class MainWindow(Gtk.ApplicationWindow):
         sw.set_child(self.result_list.list_view)
         self.result_list.list_view.grab_focus()
 
-        self.open_bt = Gtk.Button(label="Select dir")
-        self.open_bt.set_action_name("app.open-dir")
+        self.open_bt = self.make_button("Select dir", "open-dir")
         self.bottom_box.append(self.open_bt)
 
-        self.calc_bt = Gtk.Button(label="Calculate")
-        self.calc_bt.set_action_name("app.calculate-sizes")
+        self.calc_bt = self.make_button("Calculate", "calculate-sizes")
         self.bottom_box.append(self.calc_bt)
 
-        self.abort_bt = Gtk.Button(label="Abort")
-        #self.abort_bt.set_action_name("app.break-calculation") # doesn't work here with set_sensitive(False)
+        self.abort_bt = self.make_button("Abort", "break-calculation")
         self.abort_bt.set_sensitive(False);
         self.bottom_box.append(self.abort_bt)
 
-        self.close_bt = Gtk.Button(label="Close")
-        self.close_bt.set_action_name("app.quit")
+        self.close_bt = self.make_button("Close", "quit")
         self.bottom_box.append(self.close_bt)
 
         self.header = Gtk.HeaderBar()
@@ -67,6 +65,12 @@ class MainWindow(Gtk.ApplicationWindow):
         sm.set_color_scheme(Adw.ColorScheme.PREFER_LIGHT) ## Adw.ColorScheme.PREFER_DARK
         # для стилизации приложения - adwaita
         # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
+
+    def make_button(self, label, action):
+        shortcut = shortcuts[action]
+        bt = Gtk.Button(label=f"{label} ({shortcut})")
+        bt.set_action_name('app.' + action)
+        return bt
 
     def update_title(self, dir):
         title = self.app_title if dir is None else self.app_title + ": " + dir
@@ -82,7 +86,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.calc_bt.set_sensitive(False);
         self.abort_bt.set_sensitive(True);
         self.open_bt.set_sensitive(False);
-        self.abort_bt.set_action_name("app.break-calculation")
+        # self.abort_bt.set_action_name("app.break-calculation")
         # we need it this here due to it doesn't work in __init__ 
         self.result_list.clear()
 
