@@ -2,7 +2,7 @@ import os
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Adw, Gio, GLib
+from gi.repository import Adw
 from main_window import MainWindow
 from actions import AppActions
 from files import FileOps
@@ -27,5 +27,6 @@ class MyApp(Adw.Application):
         self.actions = AppActions(self.win, self.file_ops, self.script_file)
         self.actions.register_actions(self)
         self.win.present()
+        self.win.after_init()
         if auto_run:
             self.actions.calculate_handler()

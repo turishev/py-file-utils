@@ -2,7 +2,7 @@ import gi
 from result_list import FileSizeList
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gtk, Adw, Gio, Gdk, Graphene, GLib, GObject
+from gi.repository import Gtk, Adw
 
 from shortcuts import shortcuts;
 
@@ -12,6 +12,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.root_dir = None
         self.set_default_size(600, 480)
         self.update_title(None)
@@ -66,6 +67,11 @@ class MainWindow(Gtk.ApplicationWindow):
         # для стилизации приложения - adwaita
         # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
+
+    def after_init(self):
+        print('after_init')
+        self.abort_bt.set_sensitive(False); # this one doesn't work in __init__
+
     def make_button(self, label, action):
         shortcut = shortcuts[action]
         bt = Gtk.Button(label=f"{label} ({shortcut})")
@@ -86,8 +92,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.calc_bt.set_sensitive(False);
         self.abort_bt.set_sensitive(True);
         self.open_bt.set_sensitive(False);
-        # self.abort_bt.set_action_name("app.break-calculation")
-        # we need it this here due to it doesn't work in __init__ 
         self.result_list.clear()
 
     def stop_calculation(self):
