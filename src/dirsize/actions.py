@@ -3,7 +3,7 @@ import enum
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
-from gi.repository import Gio, GLib, Gtk
+from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_confirm_dialog, show_open_dir_dialog
 from shortcuts import shortcuts;
