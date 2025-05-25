@@ -5,9 +5,9 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
-from dialogs import show_confirm_dialog, show_open_dir_dialog
+# from dialogs import show_confirm_dialog, show_open_dir_dialog
 from shortcuts import shortcuts;
-import utils
+# import utils
 
 class ActionStatus(enum.Enum):
     WAIT = 0
@@ -20,12 +20,12 @@ class AppActions:
         self.file_ops = file_ops
         self.actions = [
             ('quit', self.quit_handler),
-            ('calculate-sizes', self.calculate_handler),
-            ('delete-selected-file', self.delete_handler),
-            ('break-calculation', self.break_calculation_handler),
-            ('dirsize-selected-file', self.dirsize_handler),
-            ('open-selected-file', self.open_handler),
-            ('open-dir', self.open_dir_handler),
+            # ('calculate-sizes', self.calculate_handler),
+            # ('delete-selected-file', self.delete_handler),
+            # ('break-calculation', self.break_calculation_handler),
+            # ('dirsize-selected-file', self.dirsize_handler),
+            # ('open-selected-file', self.open_handler),
+            # ('open-dir', self.open_dir_handler),
             ]
 
 
@@ -48,96 +48,96 @@ class AppActions:
 
 
     def quit_handler(self):
-        self.file_ops.stop_calculation()
+        # self.file_ops.stop_calculation()
         self.win.destroy()
 
 
-    def calculate_handler(self):
-        if self.status == ActionStatus.RUN: return
-        self.status = ActionStatus.RUN
-        self.win.start_calculation()
+    # def calculate_handler(self):
+    #     if self.status == ActionStatus.RUN: return
+    #     self.status = ActionStatus.RUN
+    #     self.win.start_calculation()
 
-        sum_size = 0
+    #     sum_size = 0
 
-        def set_status(sz):
-            self.win.set_status(f"Calculating ... {utils.format_size(sz)}  bites")
+    #     def set_status(sz):
+    #         self.win.set_status(f"Calculating ... {utils.format_size(sz)}  bites")
 
-        set_status(0)
+    #     set_status(0)
 
-        def _add_new_item(name, size, type):
-            nonlocal sum_size
-            sum_size += size
-            self.win.result_list.append(name, type, size)
-            set_status(sum_size)
-            self._update_ui()
+    #     def _add_new_item(name, size, type):
+    #         nonlocal sum_size
+    #         sum_size += size
+    #         self.win.result_list.append(name, type, size)
+    #         set_status(sum_size)
+    #         self._update_ui()
 
-        self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
+    #     self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
 
-        size_bounds = [(1024**3, 'Gb'),
-                       (1024**2, 'Mb'),
-                       (1024, 'kb'),
-                       (0, '')]
+    #     size_bounds = [(1024**3, 'Gb'),
+    #                    (1024**2, 'Mb'),
+    #                    (1024, 'kb'),
+    #                    (0, '')]
 
-        sums = ""
+    #     sums = ""
 
-        for i in range(len(size_bounds) - 1):
-            delim = size_bounds[i][0]
-            sign = size_bounds[i][1]
+    #     for i in range(len(size_bounds) - 1):
+    #         delim = size_bounds[i][0]
+    #         sign = size_bounds[i][1]
 
-            if sum_size >= delim:
-                sums = f'~ {round(sum_size / delim, 1)} {sign}'
-                break
+    #         if sum_size >= delim:
+    #             sums = f'~ {round(sum_size / delim, 1)} {sign}'
+    #             break
 
-        self.win.set_status("%s  bites    %s" % (utils.format_size(sum_size), sums))
-        self.win.stop_calculation()
-        self.status = ActionStatus.WAIT
-
-
-    def break_calculation_handler(self):
-        print('stop_calculation_handler')
-        if not self.status == ActionStatus.RUN: return
-        self.file_ops.stop_calculation()
-        self.win.set_status("Calculation aborted")
-        self.status = ActionStatus.WAIT
+    #     self.win.set_status("%s  bites    %s" % (utils.format_size(sum_size), sums))
+    #     self.win.stop_calculation()
+    #     self.status = ActionStatus.WAIT
 
 
-    def open_handler(self):
-        if self.status == ActionStatus.RUN: return
-        result_list = self.win.result_list
-        file_name = result_list.get_selected_name()
-        path = self.file_ops.file_path(file_name)
-
-        Popen(['xdg-open', path],
-              start_new_session=True,
-              close_fds=True,
-              stdout=DEVNULL,
-              stderr=STDOUT)
+    # def break_calculation_handler(self):
+    #     print('stop_calculation_handler')
+    #     if not self.status == ActionStatus.RUN: return
+    #     self.file_ops.stop_calculation()
+    #     self.win.set_status("Calculation aborted")
+    #     self.status = ActionStatus.WAIT
 
 
-    def delete_handler(self):
-        if self.status == ActionStatus.RUN: return
-        result_list = self.win.result_list
-        file_name = result_list.get_selected_name()
-        print("delete:"  +  file_name)
+    # def open_handler(self):
+    #     if self.status == ActionStatus.RUN: return
+    #     result_list = self.win.result_list
+    #     file_name = result_list.get_selected_name()
+    #     path = self.file_ops.file_path(file_name)
 
-        def do_delete():
-            print("do_delete:" + file_name)
-            self.win.result_list.delete_selected_item()
-            self.file_ops.delete(file_name)
+    #     Popen(['xdg-open', path],
+    #           start_new_session=True,
+    #           close_fds=True,
+    #           stdout=DEVNULL,
+    #           stderr=STDOUT)
 
-        show_confirm_dialog(self.win,
-                            f"File or dir '{file_name}' will be deleted, do continue?",
-                            do_delete)
 
-    def open_dir_handler(self):
-        if self.status == ActionStatus.RUN: return
+    # def delete_handler(self):
+    #     if self.status == ActionStatus.RUN: return
+    #     result_list = self.win.result_list
+    #     file_name = result_list.get_selected_name()
+    #     print("delete:"  +  file_name)
 
-        def on_select_dir(dir):
-            self.file_ops.set_root_dir(dir)
-            self.win.set_root_dir(dir)
-            self.win.result_list.clear()
-            self.calculate_handler()
+    #     def do_delete():
+    #         print("do_delete:" + file_name)
+    #         self.win.result_list.delete_selected_item()
+    #         self.file_ops.delete(file_name)
 
-        show_open_dir_dialog(self.win,
-                             self.file_ops.get_root_dir(),
-                             on_select_dir)
+    #     show_confirm_dialog(self.win,
+    #                         f"File or dir '{file_name}' will be deleted, do continue?",
+    #                         do_delete)
+
+    # def open_dir_handler(self):
+    #     if self.status == ActionStatus.RUN: return
+
+    #     def on_select_dir(dir):
+    #         self.file_ops.set_root_dir(dir)
+    #         self.win.set_root_dir(dir)
+    #         self.win.result_list.clear()
+    #         self.calculate_handler()
+
+    #     show_open_dir_dialog(self.win,
+    #                          self.file_ops.get_root_dir(),
+    #                          on_select_dir)
