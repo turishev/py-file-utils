@@ -1,11 +1,10 @@
 import gi
-#from result_list import FileSizeList
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw
 
-#from shortcuts import shortcuts;
-
+from shortcuts import shortcuts
+from result_list import ResultList
 
 class MainWindow(Gtk.ApplicationWindow):
     app_title = "dircmp"
