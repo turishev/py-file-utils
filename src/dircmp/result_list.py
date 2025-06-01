@@ -9,8 +9,21 @@ class DataObject(GObject.GObject):
     __gtype_name__ = 'DataObject'
 
     name = GObject.Property(type=GObject.TYPE_STRING, default="")
-    type = GObject.Property(type=GObject.TYPE_STRING, default="")
-    size = GObject.Property(type=GObject.TYPE_UINT64, default=0)
+    diff = GObject.Property(type=GObject.TYPE_STRING, default="")
+    a_to_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    del_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    b_to_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    del_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    type_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    type_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    size_a = GObject.Property(type=GObject.TYPE_UINT64, default=0)
+    size_b = GObject.Property(type=GObject.TYPE_UINT64, default=0)
+    time_a = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
+    time_b = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
+    owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    owner_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
 
     def __init__(self, name, type, size):
         super().__init__()
@@ -180,4 +193,3 @@ class ResultList():
     #     item = self.get_selected_item()
     #     print("file:" + item.name)
     #     self.delete_item(item)
-

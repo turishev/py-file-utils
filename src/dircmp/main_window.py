@@ -14,29 +14,58 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.root_dir = None
         self.set_default_size(600, 480)
-        # self.update_title(None)
+        self.set_title(self.app_title)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(self.main_box)
 
-    #     self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-    #     self.main_box.append(self.center_box)
+        self.dir_a_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.dir_a_box.set_spacing(8)
+        self.dir_a_box.set_margin_top(8)
+        # self.dir_a_box.set_margin_bottom(8)
+        self.dir_a_box.set_margin_start(8)
+        self.dir_a_box.set_margin_end(8)
 
-    #     self.status_label = Gtk.Label()
-    #     self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-    #     self.status_box.set_margin_top(8)
-    #     self.status_box.set_margin_start(8)
-    #     self.status_box.append(self.status_label)
-    #     self.main_box.append(self.status_box)
+        self.dir_b_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.dir_b_box.set_spacing(8)
+        self.dir_b_box.set_margin_top(8)
+        # self.dir_b_box.set_margin_bottom(8)
+        self.dir_b_box.set_margin_start(8)
+        self.dir_b_box.set_margin_end(8)
+        self.dir_b_box.set_spacing(8)
 
-    #     self.bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-    #     self.bottom_box.set_spacing(10)
-    #     self.bottom_box.set_margin_top(10)
-    #     self.bottom_box.set_margin_bottom(10)
-    #     self.bottom_box.set_margin_start(10)
-    #     self.bottom_box.set_margin_end(10)
-    #     self.bottom_box.set_homogeneous(True)
-    #     self.main_box.append(self.bottom_box)
+        self.main_box.append(self.dir_a_box)
+        self.main_box.append(self.dir_b_box)
+        self.dir_a_bt = self.make_button("A", "select-dir-a")
+
+        self.dir_b_bt = self.make_button("B", "select-dir-b")
+        self.dir_a_box.append(self.dir_a_bt);
+        self.dir_b_box.append(self.dir_b_bt);
+        self.dir_a_entry = Gtk.Entry()
+        self.dir_a_entry.set_hexpand(True)
+        self.dir_a_box.append(self.dir_a_entry);
+        self.dir_b_entry = Gtk.Entry()
+        self.dir_b_entry.set_hexpand(True)
+        self.dir_b_box.append(self.dir_b_entry);
+        
+        self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.main_box.append(self.center_box)
+
+        self.status_label = Gtk.Label()
+        self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.status_box.set_margin_top(8)
+        self.status_box.set_margin_start(8)
+        self.status_box.append(self.status_label)
+        self.main_box.append(self.status_box)
+
+        self.bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.bottom_box.set_spacing(10)
+        self.bottom_box.set_margin_top(10)
+        self.bottom_box.set_margin_bottom(10)
+        self.bottom_box.set_margin_start(10)
+        self.bottom_box.set_margin_end(10)
+        self.bottom_box.set_homogeneous(True)
+        self.main_box.append(self.bottom_box)
 
     #     self.result_list = FileSizeList()
     #     sw = Gtk.ScrolledWindow()
@@ -44,18 +73,15 @@ class MainWindow(Gtk.ApplicationWindow):
     #     sw.set_child(self.result_list.list_view)
     #     self.result_list.list_view.grab_focus()
 
-    #     self.open_bt = self.make_button("Select dir", "open-dir")
-    #     self.bottom_box.append(self.open_bt)
+        self.compare_bt = self.make_button("Compare", "compare-dirs")
+        self.bottom_box.append(self.compare_bt)
 
-    #     self.calc_bt = self.make_button("Calculate", "calculate-sizes")
-    #     self.bottom_box.append(self.calc_bt)
+        self.execute_bt = self.make_button("Execute", "exec-operations")
+        self.execute_bt.set_sensitive(False);
+        self.bottom_box.append(self.execute_bt)
 
-    #     self.abort_bt = self.make_button("Abort", "break-calculation")
-    #     self.abort_bt.set_sensitive(False);
-    #     self.bottom_box.append(self.abort_bt)
-
-    #     self.close_bt = self.make_button("Close", "quit")
-    #     self.bottom_box.append(self.close_bt)
+        self.close_bt = self.make_button("Close", "quit")
+        self.bottom_box.append(self.close_bt)
 
     #     self.header = Gtk.HeaderBar()
     #     self.set_titlebar(self.header)
@@ -71,21 +97,14 @@ class MainWindow(Gtk.ApplicationWindow):
     #     print('after_init')
     #     self.abort_bt.set_sensitive(False); # this one doesn't work in __init__
 
-    # def make_button(self, label, action):
-    #     shortcut = shortcuts[action]
-    #     bt = Gtk.Button(label=f"{label} ({shortcut})")
-    #     bt.set_action_name('app.' + action)
-    #     return bt
+    def make_button(self, label, action):
+        shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
+        bt = Gtk.Button(label=f"{label} {shortcut}")
+        bt.set_action_name('app.' + action)
+        return bt
 
-    # def update_title(self, dir):
-    #     title = self.app_title if dir is None else self.app_title + ": " + dir
-    #     self.set_title(title)
-
-    # def set_root_dir(self, dir):
-    #     self.update_title(dir)
-
-    # def set_status(self, text):
-    #     self.status_label.set_text(text)
+    def set_status(self, text):
+        self.status_label.set_text(text)
 
     # def start_calculation(self):
     #     self.calc_bt.set_sensitive(False);
