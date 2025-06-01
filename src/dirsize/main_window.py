@@ -73,8 +73,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.abort_bt.set_sensitive(False); # this one doesn't work in __init__
 
     def make_button(self, label, action):
-        shortcut = shortcuts[action]
-        bt = Gtk.Button(label=f"{label} ({shortcut})")
+        shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
+        bt = Gtk.Button(label=f"{label} {shortcut}")
         bt.set_action_name('app.' + action)
         return bt
 
