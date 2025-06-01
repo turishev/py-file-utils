@@ -25,95 +25,130 @@ class DataObject(GObject.GObject):
     perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
 
-    def __init__(self, name, type, size):
+    def __init__(self, name, diff, type_a, type_b, size_a, size_b):#TODO
         super().__init__()
         self.name = name
-        self.type = type
-        self.size = size
+        self.diff = diff
+        self.type_a = type_a
+        self.type_b = type_b
+        self.size_a = size_a
+        self.size_b = size_b
 
-
+def create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
+    factory = Gtk.SignalListItemFactory()
+    factory.connect("setup", setup_fn)
+    factory.connect("bind", bind_fn)
+    exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
+    sorter = Gtk.NumericSorter(expression=exp) if (sorter_type == "numeric") else Gtk.StringSorter(expression=exp) # "string"
+    column = Gtk.ColumnViewColumn(title=name, factory=factory)
+    column.set_sorter(sorter)
+    return column
+        
 class ResultList():
     def __init__(self):
         self.store = Gio.ListStore(item_type=DataObject)
+        self.list_view = Gtk.ColumnView()
 
-    #     factory_type_column = Gtk.SignalListItemFactory()
-    #     factory_type_column.connect("setup", self.setup_type_column)
-    #     factory_type_column.connect("bind", self.bind_type_column)
+        name_col = create_list_column("Name", "name", self.setup_name, self.bind_name, "string")
+        name_col.set_expand(True)
+        self.list_view.append_column(name_col)
+        self.list_view.append_column(create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "string"))
 
-    #     factory_size_column = Gtk.SignalListItemFactory()
-    #     factory_size_column.connect("setup", self.setup_size_column)
-    #     factory_size_column.connect("bind", self.bind_size_column)
+        self.list_view.append_column(create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "string"))
+        self.list_view.append_column(create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "string"))
+        self.list_view.append_column(create_list_column("A size", "type_a", self.setup_size_a, self.bind_size_a, "number"))
+        self.list_view.append_column(create_list_column("B size", "type_b", self.setup_size_b, self.bind_size_b, "number"))
 
-    #     factory_name_column = Gtk.SignalListItemFactory()
-    #     factory_name_column.connect("setup", self.setup_name_column)
-    #     factory_name_column.connect("bind", self.bind_name_column)
+        sorter = Gtk.ColumnView.get_sorter(self.list_view)
+        self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
+        self.selection = Gtk.SingleSelection(model=self.sort_model)
+        # self.selection.connect("selection-changed", self.on_sel_changed)
 
-    #     self.type_column = Gtk.ColumnViewColumn(title="type", factory=factory_type_column)
-    #     self.type_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "type")))
-
-    #     self.size_column = Gtk.ColumnViewColumn(title="size", factory=factory_size_column)
-    #     self.size_column.set_sorter(Gtk.NumericSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "size")))
-
-    #     self.name_column = Gtk.ColumnViewColumn(title="name", factory=factory_name_column)
-    #     self.name_column.set_sorter(Gtk.StringSorter(expression=Gtk.PropertyExpression.new(DataObject, None, "name")))
-    #     self.name_column.set_expand(True);
-
-    #     self.list_view = Gtk.ColumnView()
-    #     self.list_view.append_column(self.type_column)
-    #     self.list_view.append_column(self.size_column)
-    #     self.list_view.append_column(self.name_column)
-
-    #     sorter = Gtk.ColumnView.get_sorter(self.list_view)
-    #     self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
-    #     self.selection = Gtk.SingleSelection(model=self.sort_model)
-    #     self.selection.connect("selection-changed", self.on_sel_changed)
-
-    #     self.list_view.set_model(self.selection)
-    #     self.list_view.set_hexpand(True)
-    #     self.list_view.set_vexpand(True)
+        self.list_view.set_model(self.selection)
+        self.list_view.set_hexpand(True)
+        self.list_view.set_vexpand(True)
     #     self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
     #     self.list_view.connect("activate", self.on_activate);
 
+        self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567))
 
-    # def setup_type_column(self, factory, item):
-    #     label = Gtk.Label()
-    #     label.set_xalign(0.5)
-    #     item.set_child(label)
-    #     self.connect_menu(label, item)
+    
+    def setup_name(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(0.0)
+        item.set_child(label)
+        self.connect_menu(label, item)
 
-    # def bind_type_column(self, factory, item):
-    #     label = item.get_child()
-    #     obj = item.get_item()
-    #     label.set_text(str(obj.type))
+    def bind_name(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.name)
 
-    # def setup_size_column(self, factory, item):
-    #     label = Gtk.Label()
-    #     label.set_xalign(1.0)
-    #     item.set_child(label)
-    #     self.connect_menu(label, item)
 
-    # def bind_size_column(self, factory, item):
-    #     label = item.get_child()
-    #     obj = item.get_item()
-    #     label.set_text(utils.format_size(obj.size))
+    def setup_type_a(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
 
-    # def setup_name_column(self, factory, item):
-    #     label = Gtk.Label()
-    #     label.set_xalign(0.0)
-    #     item.set_child(label)
-    #     self.connect_menu(label, item)
+    def bind_type_a(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.type_a)
 
-    # def bind_name_column(self, factory, item):
-    #     label = item.get_child()
-    #     obj = item.get_item()
-    #     label.set_text(obj.name)
+    def setup_type_b(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
 
-    # def connect_menu(self, widget, item):
-    #     click = Gtk.GestureClick()
-    #     click.set_button(3)
-    #     click.connect("pressed", self.on_mouse_right_button_down, item)
-    #     click.connect("released", self.on_mouse_right_button_up, item)
-    #     widget.add_controller(click)
+    def bind_type_b(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.type_b)
+
+    def setup_size_a(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(1.0)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_size_a(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        #label.set_text(utils.format_size(obj.size_a))
+        label.set_text(str(obj.size_a))
+
+    def setup_size_b(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(1.0)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_size_b(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        #label.set_text(utils.format_size(obj.size_b))
+        label.set_text(str(obj.size_b))
+
+    def setup_diff(self, factory, item):
+        label = Gtk.Label()
+        label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
+        
+    def bind_diff(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.diff)
+
+    def connect_menu(self, widget, item):
+        click = Gtk.GestureClick()
+        click.set_button(3)
+        click.connect("pressed", self.on_mouse_right_button_down, item)
+        click.connect("released", self.on_mouse_right_button_up, item)
+        widget.add_controller(click)
 
     # def on_activate(self): pass
 
@@ -136,18 +171,18 @@ class ResultList():
     # def clear(self):
     #     self.store.remove_all()
 
-    # def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
-    #                                x : float, y : float, cell : Gtk.ColumnViewCell):
-    #     # print("on_mouse_right_button_down")
-    #     data = cell.get_item()
-    #     print(data)
-    #     self.select_item(data)
+    def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
+                                   x : float, y : float, cell : Gtk.ColumnViewCell):
+        # print("on_mouse_right_button_down")
+        data = cell.get_item()
+        print(data)
+        # self.select_item(data)
 
-    # def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int,
-    #                              x : float, y : float, cell : Gtk.ColumnViewCell):
-    #     # print("on_mouse_right_button_up")
-    #     data = cell.get_item()
-    #     self.show_item_menu(cell.get_child(), x, y, data)
+    def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int,
+                                 x : float, y : float, cell : Gtk.ColumnViewCell):
+        # print("on_mouse_right_button_up")
+        data = cell.get_item()
+        # self.show_item_menu(cell.get_child(), x, y, data)
 
     # def select_item(self, item):
     #     model = self.selection

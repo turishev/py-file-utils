@@ -67,11 +67,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bottom_box.set_homogeneous(True)
         self.main_box.append(self.bottom_box)
 
-    #     self.result_list = FileSizeList()
-    #     sw = Gtk.ScrolledWindow()
-    #     self.center_box.append(sw)
-    #     sw.set_child(self.result_list.list_view)
-    #     self.result_list.list_view.grab_focus()
+        self.result_list = ResultList()
+        sw = Gtk.ScrolledWindow()
+        self.center_box.append(sw)
+        sw.set_child(self.result_list.list_view)
+        self.result_list.list_view.grab_focus()
 
         self.compare_bt = self.make_button("Compare", "compare-dirs")
         self.bottom_box.append(self.compare_bt)
