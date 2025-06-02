@@ -39,11 +39,17 @@ def create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory.connect("setup", setup_fn)
     factory.connect("bind", bind_fn)
     exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
-    sorter = Gtk.NumericSorter(expression=exp) if (sorter_type == "numeric") else Gtk.StringSorter(expression=exp) # "string"
+
+    bool_sort_fn = lambda a,b,_: 0 if a == b else (1 if a else -1)
+    
+    if sorter_type == "numeric": sorter = Gtk.NumericSorter(expression=exp)
+    elif sorter_type == "bool": sorter = Gtk.CustomSorter.new(sort_func=bool_sort_fn)
+    else: sorter = Gtk.StringSorter(expression=exp) # "string"
+
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
     column.set_sorter(sorter)
     return column
-        
+
 class ResultList():
     def __init__(self):
         self.store = Gio.ListStore(item_type=DataObject)
@@ -53,6 +59,10 @@ class ResultList():
         name_col.set_expand(True)
         self.list_view.append_column(name_col)
         self.list_view.append_column(create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "string"))
+        self.list_view.append_column(create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "bool"))
+        self.list_view.append_column(create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "bool"))
+        self.list_view.append_column(create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "bool"))
+        self.list_view.append_column(create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "bool"))
 
         self.list_view.append_column(create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "string"))
         self.list_view.append_column(create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "string"))
@@ -73,7 +83,7 @@ class ResultList():
         self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456))
         self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567))
 
-    
+
     def setup_name(self, factory, item):
         label = Gtk.Label()
         label.set_xalign(0.0)
@@ -137,11 +147,51 @@ class ResultList():
         label.set_xalign(0.5)
         item.set_child(label)
         self.connect_menu(label, item)
-        
+
     def bind_diff(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
         label.set_text(obj.diff)
+
+    def setup_a_to_b(self, factory, item):
+        cb = Gtk.CheckButton()
+        item.set_child(cb)
+        #self.connect_menu(cb, item)
+
+    def bind_a_to_b(self, factory, item):
+        cb = item.get_child()
+        obj = item.get_item()
+        cb.set_active(obj.a_to_b)
+
+    def setup_b_to_a(self, factory, item):
+        cb = Gtk.CheckButton()
+        item.set_child(cb)
+        #self.connect_menu(cb, item)
+
+    def bind_b_to_a(self, factory, item):
+        cb = item.get_child()
+        obj = item.get_item()
+        cb.set_active(obj.b_to_a)
+
+    def setup_del_a(self, factory, item):
+        cb = Gtk.CheckButton()
+        item.set_child(cb)
+        #self.connect_menu(cb, item)
+
+    def bind_del_a(self, factory, item):
+        cb = item.get_child()
+        obj = item.get_item()
+        cb.set_active(obj.del_a)
+
+    def setup_del_b(self, factory, item):
+        cb = Gtk.CheckButton()
+        item.set_child(cb)
+        #self.connect_menu(cb, item)
+
+    def bind_del_b(self, factory, item):
+        cb = item.get_child()
+        obj = item.get_item()
+        cb.set_active(obj.del_b)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
