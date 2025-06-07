@@ -8,12 +8,13 @@ from actions import AppActions
 from files import FileOps
 
 class MyApp(Adw.Application):
-    def __init__(self, root_dir):
+    def __init__(self, dir_a, dir_b):
         super().__init__()
-        if root_dir is None:
-            root_dir = os.getcwd()
-
-        self.file_ops = FileOps(root_dir)
+        cwd = os.getcwd()
+        da = dir_a if dir_a else cwd
+        db = dir_b if dir_b else cwd
+        
+        self.file_ops = FileOps(da, db)
         self.connect('activate', self.on_activate)
 
     def on_activate(self, app):

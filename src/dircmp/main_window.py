@@ -49,6 +49,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_box.append(self.dir_b_entry);
         
         self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.center_box.set_margin_start(8)
+        self.center_box.set_margin_end(8)
         self.main_box.append(self.center_box)
 
         self.status_label = Gtk.Label()
