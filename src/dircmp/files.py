@@ -4,6 +4,7 @@ from pathlib import Path
 from shutil import rmtree
 from collections import namedtuple
 
+
 FileInfo = namedtuple('FileInfo', ['path', 'size', 'type', 'owner', 'time'])
 
 class FileOps:
@@ -29,17 +30,12 @@ class FileOps:
     def set_error_handler(self, error_handler):
         self.eror_handler = error_handler
 
-    def get_dir_a(self):
-        return str(self.dir_a)
+    def get_dir(self, letter):
+        return str(self.dir_a if letter=='a' else self.dir_b)
 
-    def get_dir_b(self):
-        return str(self.dir_b)
-
-    def set_dir_a(self, dir):
-        self.dir_a = Path(dir)
-
-    def set_dir_b(self, dir):
-        self.dir_b = Path(dir)
+    def set_dir(self, letter, dir):
+        if letter=='a': self.dir_a = Path(dir)
+        else: self.dir_b = Path(dir)
 
     def _get_dir_file_info(self, root_dir, on_iter_cb):
         result = {}

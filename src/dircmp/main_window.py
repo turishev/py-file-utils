@@ -118,3 +118,7 @@ class MainWindow(Gtk.ApplicationWindow):
     #     self.calc_bt.set_sensitive(True);
     #     self.abort_bt.set_sensitive(False);
     #     self.open_bt.set_sensitive(True);
+
+    def set_dir(self, letter, dir):
+        if letter == 'a': self.dir_a_entry.set_text(dir)
+        else: self.dir_b_entry.set_text(dir)

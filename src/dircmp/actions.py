@@ -6,6 +6,7 @@ gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
 # from dialogs import show_confirm_dialog, show_open_dir_dialog
+from dialogs import show_open_dir_dialog
 from shortcuts import shortcuts;
 # import utils
 
@@ -25,7 +26,8 @@ class AppActions:
             # ('break-calculation', self.break_calculation_handler),
             # ('dirsize-selected-file', self.dirsize_handler),
             # ('open-selected-file', self.open_handler),
-            # ('open-dir', self.open_dir_handler),
+            ('select-dir-a', lambda: self.open_dir_handler('a')),
+            ('select-dir-b', lambda: self.open_dir_handler('b')),
             ]
 
 
@@ -43,7 +45,7 @@ class AppActions:
             app.set_accels_for_action("app.%s" % name, keys)
 
         for act, handler in self.actions:
-            key = shortcuts[act]
+            key = shortcuts[act]  if act in shortcuts else ""
             _create_act(act, [key], handler)
 
 
@@ -129,15 +131,13 @@ class AppActions:
     #                         f"File or dir '{file_name}' will be deleted, do continue?",
     #                         do_delete)
 
-    # def open_dir_handler(self):
-    #     if self.status == ActionStatus.RUN: return
+    def open_dir_handler(self, letter):
+        if self.status == ActionStatus.RUN: return
 
-    #     def on_select_dir(dir):
-    #         self.file_ops.set_root_dir(dir)
-    #         self.win.set_root_dir(dir)
-    #         self.win.result_list.clear()
-    #         self.calculate_handler()
+        def on_select_dir(dir):
+            self.file_ops.set_dir(letter, dir)
+            self.win.set_dir(letter, dir)
 
-    #     show_open_dir_dialog(self.win,
-    #                          self.file_ops.get_root_dir(),
-    #                          on_select_dir)
+        show_open_dir_dialog(self.win,
+                             self.file_ops.get_dir(letter),
+                             on_select_dir)
