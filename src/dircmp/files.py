@@ -1,145 +1,125 @@
+from __future__ import annotations # for list annotations
+from typing import TypeAlias
+# from dataclasses import dataclass
+
 import pwd
 import grp
 from pathlib import Path
-from shutil import rmtree
+#from shutil import rmtree
 from collections import namedtuple
 
 
 FileInfo = namedtuple('FileInfo', ['path', 'size', 'type', 'owner', 'time'])
 
-class FileOps:
-    file_types = {8 : 'file',
-                  4 : 'dir',
-                  10 : 'link',
-                  12 : 'sock',
-                  1 : 'pipe',
-                  2 : 'char',
-                  6 : 'block'}
+
+_file_types = {8 : 'file',
+               4 : 'dir',
+               10 : 'link',
+               12 : 'sock',
+               1 : 'pipe',
+               2 : 'char',
+               6 : 'block'}
 
 
-    def __init__(self, dir_a, dir_b):
-        self.break_walk = False
-        self.eror_handler = None
-        self.dir_a = Path(dir_a).absolute()
-        if not self.dir_a.is_dir():
-            self.dir_b = Path.cwd().absolute()
-        self.dir_b = Path(dir_b).absolute()
-        if not self.dir_b.is_dir():
-            self.dir_b = Path.cwd().absolute()
+_break_walk = False
 
-    def set_error_handler(self, error_handler):
-        self.eror_handler = error_handler
+def _get_file_info(path : Path):
+    st = path.stat()
 
-    def get_dir(self, letter):
-        return str(self.dir_a if letter=='a' else self.dir_b)
-
-    def set_dir(self, letter, dir):
-        if letter=='a': self.dir_a = Path(dir)
-        else: self.dir_b = Path(dir)
-
-    def _get_dir_file_info(self, root_dir, on_iter_cb):
-        result = {}
-        for curr_dir, dirs, files in Path.walk(root_dir, follow_symlinks=False):
-            if (not on_iter_cb is None): on_iter_cb()
-            if self.break_walk: return result
-
-            dir = Path(curr_dir)
-
-            for f in files + dirs:
-                path = (dir / f)
-                st = path.stat()
-
-                info = FileInfo(
-                    path=path,
-                    size=st.st_size,
-                    time=st.st_mtime,
-                    type=self.file_type(st.st_mode),
-                    owner=self.owner(st.st_uid, st.st_gid),
-                )
-                print("info:" + str(info))
-                result[str(path.absolute())] = info
-
-        return result
+    return FileInfo(
+        path=str(path),
+        size=st.st_size,
+        time=st.st_mtime,
+        type=file_type(st.st_mode),
+        owner=owner(st.st_uid, st.st_gid),
+    )
 
 
-    # def get_dir_size_list(self, on_item_cb=None, on_iter_cb=None):
-    #     self.break_walk = False
-    #     result = []
-    #     try:
-    #         dir = Path(self.root_dir)
-    #         result.append(('.', self.file_size(dir), 'D'))
-    #         # add root_dir size without files
+def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> str:
+    if info_a is None and info_b is None: return '='
+    elif info_a is None and info_b is not None: return 'B'
+    elif info_a is not None and info_b is None: return 'A'
+    elif info_a.type != info_b.type: return 'f'
+    elif info_a.time != info_b.time: return 't'
+    elif info_a.size != info_b.size: return 's'
+    elif info_a.owner != info_b.owner: return 'o'
+    else: return '='
 
-    #         for file in dir.iterdir():
-    #             if self.break_walk: return result
+def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={}, on_item=None):
+    global _break_walk
+    dir_a_len = len(str(dir_a))
 
-    #             try:
-    #                 if file.is_file():
-    #                     item = (file.name, self.file_size(file), 'F')
-    #                 elif file.is_dir():
-    #                     item = (file.name, self._get_dir_size(file, on_iter_cb), 'D')
-    #                 else:
-    #                     item = (file.name, self.file_size(file), '*')
+    for pcur_dir, _, files in Path.walk(Path(dir_a), follow_symlinks=False):
+        if _break_walk: return
 
-    #                 result.append(item)
-    #                 if (on_item_cb != None): on_item_cb(item)
+        sub_dir = str(pcur_dir)[dir_a_len:]
+        cur_dir_b = Path(str(dir_b) + sub_dir)
 
-    #             except Exception as e:
-    #                 print(f'Error on check file or dir "{file.name}":{e}')
+        for f in files:
+            key = (sub_dir[1:] if sub_dir != '' and sub_dir[0] == '/' else sub_dir) + f
 
-    #     except Exception as e:
-    #         print(f'Error 2 on check dir "{self.root_dir}":{e}')
-    #     return result
+            if result.get(key) is None:
+                path_a = pcur_dir / f
+                path_b = (cur_dir_b / f).resolve()
+                info_a = _get_file_info(path_a)
+                info_b = _get_file_info(path_b) if path_b.exists() else None
+                comp_res = _compare_info(info_b, info_a) if reverse_dir else _compare_info(info_a, info_b)
 
-    def stop_calculation(self):
-        self.break_walk = True
-
-    # def delete(self, file_name):
-    #     try:
-    #         if not self.root_dir is None:
-    #             file = self.root_dir / file_name
-    #             if file.is_dir():
-    #                 rmtree(file)
-    #             else:
-    #                 file.unlink()
-    #     except Exception as e:
-    #         info = 'delete file error:' + file_name
-    #         print(info)
-    #         print(e)
-    #         if not self.eror_handler is None:
-    #             self.eror_handler(info)
+                if comp_res != '=':
+                    item = (comp_res, info_a, info_b)
+                    result[key] = item
+                    if on_item is not None: on_item(key, item)
 
 
-    # def file_path(self, file_name):
-    #     if self.root_dir is None:
-    #         raise Exception('file_ops: root_dir is not set')
-    #     else:
-    #         return str((self.root_dir / file_name).absolute())
+
+def compare_dirs(dir_a : str, dir_b : str, on_item=None):
+    global _break_walk
+
+    adir_a = Path(dir_a).resolve()
+    adir_b = Path(dir_b).resolve()
+    _break_walk = False
+    result={}
+    _compare_dirs(adir_a, adir_b, False, result, on_item)
+    _compare_dirs(adir_b, adir_a, True, result, on_item)
+    return result
+
+def stop_calculation():
+    global _break_walk
+    _break_walk = True
+
+# def delete(self, file_name):
+#     try:
+#         if not self.root_dir is None:
+#             file = self.root_dir / file_name
+#             if file.is_dir():
+#                 rmtree(file)
+#             else:
+#                 file.unlink()
+#     except Exception as e:
+#         info = 'delete file error:' + file_name
+#         print(info)
+#         print(e)
+#         if not self.eror_handler is None:
+#             self.eror_handler(info)
 
 
-    @staticmethod
-    def abs_path(file_name):
-        return str(Path(file_name).absolute())
+def file_size(file):
+    if file.exists(follow_symlinks=False):
+        return file.stat(follow_symlinks=False).st_size
+    else:
+        print(f'file {file} doesn\'t exist')
+        return 0
 
-    @staticmethod
-    def file_size(file):
-        if file.exists(follow_symlinks=False):
-            return file.stat(follow_symlinks=False).st_size
-        else:
-            print(f'file {file} doesn\'t exist')
-            return 0
 
-    @staticmethod
-    def file_type(mode):
-        return FileOps.file_types[mode >> 12]
+def file_type(mode):
+    return _file_types[mode >> 12]
 
-    @staticmethod
-    def owner(uid, gid):
-        uname = pwd.getpwuid(uid)[0]
-        gname = grp.getgrgid(gid)[0]
-        return uname + ":" + gname
 
-    @staticmethod
-    def perm(mode):
-        return hex(mode & 0o7777)
+def owner(uid, gid):
+    uname = pwd.getpwuid(uid)[0]
+    gname = grp.getgrgid(gid)[0]
+    return uname + ":" + gname
 
+
+def perm(mode):
+    return hex(mode & 0o7777)

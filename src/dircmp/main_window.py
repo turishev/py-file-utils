@@ -13,7 +13,7 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
 
         self.root_dir = None
-        self.set_default_size(600, 480)
+        self.set_default_size(800, 600)
         self.set_title(self.app_title)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -79,7 +79,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.bottom_box.append(self.compare_bt)
 
         self.execute_bt = self.make_button("Execute", "exec-operations")
-        self.execute_bt.set_sensitive(False);
+        self.execute_bt.set_sensitive(False)
         self.bottom_box.append(self.execute_bt)
 
         self.close_bt = self.make_button("Close", "quit")
@@ -108,13 +108,14 @@ class MainWindow(Gtk.ApplicationWindow):
     def set_status(self, text):
         self.status_label.set_text(text)
 
-    # def start_calculation(self):
-    #     self.calc_bt.set_sensitive(False);
-    #     self.abort_bt.set_sensitive(True);
-    #     self.open_bt.set_sensitive(False);
-    #     self.result_list.clear()
+    def start_compare(self):
+        self.compare_bt.set_sensitive(False);
+        # self.abort_bt.set_sensitive(True);
+        # self.open_bt.set_sensitive(False);
+        # self.result_list.clear()
 
-    # def stop_calculation(self):
+    def stop_compare(self):
+        self.compare_bt.set_sensitive(True);
     #     self.calc_bt.set_sensitive(True);
     #     self.abort_bt.set_sensitive(False);
     #     self.open_bt.set_sensitive(True);
@@ -122,3 +123,13 @@ class MainWindow(Gtk.ApplicationWindow):
     def set_dir(self, letter, dir):
         if letter == 'a': self.dir_a_entry.set_text(dir)
         else: self.dir_b_entry.set_text(dir)
+        if self.dir_a_entry.get_text() != "" and self.dir_b_entry.set_text != "":
+            self.compare_bt.set_sensitive(True)
+
+    def get_dir(self, letter):
+        if letter == 'a': return self.dir_a_entry.get_text()
+        else: return self.dir_b_entry.get_text()
+
+
+    def append_to_list(self, name, diff, type_a, type_b, size_a, size_b):
+        self.result_list.append(name, diff, type_a, type_b, size_a, size_b)

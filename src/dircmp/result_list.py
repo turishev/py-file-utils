@@ -16,8 +16,8 @@ class DataObject(GObject.GObject):
     del_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
     type_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     type_b = GObject.Property(type=GObject.TYPE_STRING, default="")
-    size_a = GObject.Property(type=GObject.TYPE_UINT64, default=0)
-    size_b = GObject.Property(type=GObject.TYPE_UINT64, default=0)
+    size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1)
+    size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1)
     time_a = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
     time_b = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
     owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
@@ -42,10 +42,13 @@ def create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
 
     bool_sort_fn = lambda a,b,_: 0 if a == b else (1 if a else -1)
     
-    if sorter_type == "numeric": sorter = Gtk.NumericSorter(expression=exp)
+    if sorter_type == "number": sorter = Gtk.NumericSorter(expression=exp)
     elif sorter_type == "bool": sorter = Gtk.CustomSorter.new(sort_func=bool_sort_fn)
     else: sorter = Gtk.StringSorter(expression=exp) # "string"
 
+    print(name)
+    print(data_field)
+    print(sorter)
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
     column.set_sorter(sorter)
     return column
@@ -80,8 +83,12 @@ class ResultList():
     #     self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
     #     self.list_view.connect("activate", self.on_activate);
 
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567))
         self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456))
         self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456))
+
 
 
     def setup_name(self, factory, item):
@@ -128,7 +135,8 @@ class ResultList():
         label = item.get_child()
         obj = item.get_item()
         #label.set_text(utils.format_size(obj.size_a))
-        label.set_text(str(obj.size_a))
+        # label.set_text(str(obj.size_a) if obj.size_a >= 0 else '') # -1 is size unknown
+        label.set_text(str(obj.size_a)) # -1 is size unknown
 
     def setup_size_b(self, factory, item):
         label = Gtk.Label()
@@ -140,7 +148,7 @@ class ResultList():
         label = item.get_child()
         obj = item.get_item()
         #label.set_text(utils.format_size(obj.size_b))
-        label.set_text(str(obj.size_b))
+        label.set_text(str(obj.size_b) if obj.size_b >= 0 else '')
 
     def setup_diff(self, factory, item):
         label = Gtk.Label()
@@ -210,13 +218,21 @@ class ResultList():
     #         #print("No item selected")
     #         pass
 
-    # def append(self, name, type, size):
-    #     self.store.append(DataObject(name, type, size))
-    #     # model = self.selection
-    #     # model.select_item(0, True)
-    #     self.list_view.scroll_to(0,
-    #                              self.name_column,
-    #                              flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+    def append(self, name, diff, type_a, type_b, size_a, size_b):
+        obj = DataObject(name,
+                         diff,
+                         type_a,
+                         type_b,
+                         -1 if size_a is None else size_a,
+                         -1 if size_b is None else size_b
+                         )
+        
+        self.store.append(obj)
+        # model = self.selection
+        # model.select_item(0, True)
+        # self.list_view.scroll_to(0,
+        #                          self.name_column,
+        #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
 
     # def clear(self):
     #     self.store.remove_all()
