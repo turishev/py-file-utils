@@ -6,11 +6,9 @@ import pwd
 import grp
 from pathlib import Path
 #from shutil import rmtree
-from collections import namedtuple
+#from collections import namedtuple
 
-
-FileInfo = namedtuple('FileInfo', ['path', 'size', 'type', 'owner', 'time'])
-
+from app_types import *
 
 _file_types = {8 : 'file',
                4 : 'dir',
@@ -35,15 +33,16 @@ def _get_file_info(path : Path):
     )
 
 
-def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> str:
-    if info_a is None and info_b is None: return '='
-    elif info_a is None and info_b is not None: return 'B'
-    elif info_a is not None and info_b is None: return 'A'
-    elif info_a.type != info_b.type: return 'f'
-    elif info_a.time != info_b.time: return 't'
-    elif info_a.size != info_b.size: return 's'
-    elif info_a.owner != info_b.owner: return 'o'
-    else: return '='
+def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> DiffType:
+    if info_a is None and info_b is None: return DiffType.EQ
+    elif info_a is None and info_b is not None: return DiffType.B
+    elif info_a is not None and info_b is None: return DiffType.A
+    elif info_a.type != info_b.type: return DiffType.TYPE
+    elif info_a.time != info_b.time: return DiffType.TIME
+    elif info_a.size != info_b.size: return DiffType.SIZE
+    elif info_a.owner != info_b.owner: return DiffType.OWNER
+    else: return DiffType.EQ
+
 
 def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={}, on_item=None):
     global _break_walk
@@ -65,11 +64,10 @@ def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={}, on_i
                 info_b = _get_file_info(path_b) if path_b.exists() else None
                 comp_res = _compare_info(info_b, info_a) if reverse_dir else _compare_info(info_a, info_b)
 
-                if comp_res != '=':
+                if comp_res != DiffType.EQ:
                     item = (comp_res, info_a, info_b)
                     result[key] = item
                     if on_item is not None: on_item(key, item)
-
 
 
 def compare_dirs(dir_a : str, dir_b : str, on_item=None):
@@ -81,7 +79,8 @@ def compare_dirs(dir_a : str, dir_b : str, on_item=None):
     result={}
     _compare_dirs(adir_a, adir_b, False, result, on_item)
     _compare_dirs(adir_b, adir_a, True, result, on_item)
-    return result
+    return [CompareResultItem(k, result[k][0], result[k][1], result[k][2]) for k in result.keys()]
+
 
 def stop_calculation():
     global _break_walk

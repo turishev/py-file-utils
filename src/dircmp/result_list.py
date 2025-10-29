@@ -1,3 +1,6 @@
+from __future__ import annotations # for list annotations
+from typing import TypeAlias
+
 import gi
 from time import localtime, strftime
 
@@ -5,7 +8,8 @@ from time import localtime, strftime
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 
-#import utils
+from app_types import *
+
 
 class DataObject(GObject.GObject):
     __gtype_name__ = 'DataObject'
@@ -39,6 +43,19 @@ class DataObject(GObject.GObject):
         self.owner_b = owner_b
         self.time_a = time_a
         self.time_b = time_b
+
+def _diff_letter(diff : DiffType):
+    diff_map = {
+        DiffType.EQ.value : '=',
+        DiffType.A.value : 'A',
+        DiffType.B.value : 'B',
+        DiffType.TIME.value : 't',
+        DiffType.SIZE.value : 's',
+        DiffType.TYPE.value : 'f',
+        DiffType.OWNER.value : 'o',
+        DiffType.CONTENT.value : 'c',
+    }
+    return diff_map.get(diff.value, '?')
 
 def _format_time(tm):
     return strftime("%Y-%m-%d %H:%M:%S", localtime(tm))
@@ -91,11 +108,11 @@ class ResultList():
     #     self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
     #     self.list_view.connect("activate", self.on_activate);
 
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567, 123.456, 121.456, "aaa", "bbb"))
-        self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456, 1761235050.4936545, 123.456))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567, 123.456, 123.456))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444, 1741622985.4395833, 123.456))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456, 12.456, 123.456))
+        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567, 123.456, 121.456, "aaa", "bbb"))
+        # self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456, 1761235050.4936545, 123.456))
+        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567, 123.456, 123.456))
+        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444, 1741622985.4395833, 123.456))
+        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456, 12.456, 123.456))
 
     def setup_name(self, factory, item):
         label = Gtk.Label()
@@ -280,17 +297,18 @@ class ResultList():
     #         #print("No item selected")
     #         pass
 
-    def append(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b, owner_a, owner_b):
-        obj = DataObject(name,
-                         diff,
-                         type_a,
-                         type_b,
-                         -1 if size_a is None else size_a,
-                         -1 if size_b is None else size_b,
-                         time_a,
-                         time_b,
-                         owner_a,
-                         owner_b
+
+    def _append(self, item : CompareResultItem):
+        obj = DataObject(item.name,
+                         _diff_letter(item.diff),
+                         item.file_a.type,
+                         item.file_b.type,
+                         -1 if item.file_a.size is None else item.file_a.size,
+                         -1 if item.file_b.size is None else item.file_b.size,
+                         item.file_a.time,
+                         item.file_b.time,
+                         item.file_a.owner,
+                         item.file_b.owner
                          )
         
         self.store.append(obj)
@@ -360,3 +378,10 @@ class ResultList():
     #     item = self.get_selected_item()
     #     print("file:" + item.name)
     #     self.delete_item(item)
+
+    def get_oper_list(self):
+        print("get_oper_list")
+        while True:
+            item = self.store.get_item()
+            print(f"item:{item}")
+            if item is None: return 

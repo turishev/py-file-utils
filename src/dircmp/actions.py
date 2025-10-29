@@ -12,7 +12,10 @@ from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_open_dir_dialog
 from shortcuts import shortcuts;
 # import utils
-from files import FileInfo, compare_dirs
+
+from app_types import *
+from files import compare_dirs
+
 
 class ActionStatus(enum.Enum):
     WAIT = 0
@@ -51,6 +54,19 @@ def _compare_handler():
 
     result = compare_dirs(dir_a, dir_b, _add_new_item)
     _main_window.stop_compare()
+    _action_status = ActionStatus.WAIT
+
+def _exec_handler():
+    global _main_window
+    global _action_status
+
+    if _action_status == ActionStatus.RUN: return
+    _action_status = ActionStatus.RUN
+    # _main_window.start_compare()
+
+    opers = _main_window.get_oper_list()
+    print(f"operlist:{opers}")
+    # _main_window.stop_compare()
     _action_status = ActionStatus.WAIT
 
 
@@ -104,6 +120,7 @@ def _open_dir_handler(letter):
 _actions = [
     ('quit', _quit_handler),
     ('compare-dirs', _compare_handler),
+    ('exec-operation', _exec_handler),
     # ('calculate-sizes', self.calculate_handler),
     # ('delete-selected-file', self.delete_handler),
     # ('break-calculation', self.break_calculation_handler),
