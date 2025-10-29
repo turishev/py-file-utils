@@ -7,5 +7,6 @@ shortcuts = {
     # 'dirsize-selected-file' : '<Ctrl>space',
     # 'open-selected-file' : '<Ctrl>f',
     'select-dir-a' : '<Alt>a',
-    'select-dir-b': '<Alt>b'
+    'select-dir-b': '<Alt>b',
+    'compare-dirs': '<Alt>c',
 };

@@ -1,3 +1,6 @@
+from __future__ import annotations # for list annotations
+from typing import TypeAlias
+
 import enum
 
 import gi
@@ -9,90 +12,46 @@ from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_open_dir_dialog
 from shortcuts import shortcuts;
 # import utils
+from files import FileInfo, compare_dirs
 
 class ActionStatus(enum.Enum):
     WAIT = 0
     RUN = 1
 
-class AppActions:
-    def __init__(self, win, file_ops):
-        self.status = ActionStatus.WAIT
-        self.win = win
-        self.file_ops = file_ops
-        self.actions = [
-            ('quit', self.quit_handler),
-            # ('calculate-sizes', self.calculate_handler),
-            # ('delete-selected-file', self.delete_handler),
-            # ('break-calculation', self.break_calculation_handler),
-            # ('dirsize-selected-file', self.dirsize_handler),
-            # ('open-selected-file', self.open_handler),
-            ('select-dir-a', lambda: self.open_dir_handler('a')),
-            ('select-dir-b', lambda: self.open_dir_handler('b')),
-            ]
+_action_status = ActionStatus.WAIT
+#_main_window = None
 
 
-    def _update_ui(self):
-        while GLib.MainContext.default().pending():
-            GLib.MainContext.default().iteration(False)
+def _update_ui():
+    while GLib.MainContext.default().pending():
+        GLib.MainContext.default().iteration(False)
 
-    def register_actions(self, app):
-        def _create_act(name, keys, fn):
-            # we need pass name, keys, fn as values into a separate function
-            # to decouple them from mutable iterators
-            act = Gio.SimpleAction(name=name)
-            act.connect('activate', lambda *_: fn())
-            app.add_action(act)
-            app.set_accels_for_action("app.%s" % name, keys)
-
-        for act, handler in self.actions:
-            key = shortcuts[act]  if act in shortcuts else ""
-            _create_act(act, [key], handler)
+def _quit_handler():
+    global _main_window
+    # self.file_ops.stop_calculation()
+    _main_window.destroy()
 
 
-    def quit_handler(self):
-        # self.file_ops.stop_calculation()
-        self.win.destroy()
+def _compare_handler():
+    global _main_window
+    global _action_status
 
+    if _action_status == ActionStatus.RUN: return
+    _action_status = ActionStatus.RUN
+    _main_window.start_compare()
 
-    # def calculate_handler(self):
-    #     if self.status == ActionStatus.RUN: return
-    #     self.status = ActionStatus.RUN
-    #     self.win.start_calculation()
+    dir_a = _main_window.get_dir('a')
+    dir_b = _main_window.get_dir('b')
 
-    #     sum_size = 0
+    def _add_new_item(key: str, item : tuple[str, FileInfo, FileInfo]):
+        # self.win.result_list.append(name, type, size)
+        print(f"key: {key}\ndata: {item}")
+        _main_window.append_to_list(key, item[0], item[1].type, item[2].type, item[1].size, item[2].size)
+        _update_ui()
 
-    #     def set_status(sz):
-    #         self.win.set_status(f"Calculating ... {utils.format_size(sz)}  bites")
-
-    #     set_status(0)
-
-    #     def _add_new_item(name, size, type):
-    #         nonlocal sum_size
-    #         sum_size += size
-    #         self.win.result_list.append(name, type, size)
-    #         set_status(sum_size)
-    #         self._update_ui()
-
-    #     self.file_ops.get_dir_size_list(lambda v: _add_new_item(*v), self._update_ui)
-
-    #     size_bounds = [(1024**3, 'Gb'),
-    #                    (1024**2, 'Mb'),
-    #                    (1024, 'kb'),
-    #                    (0, '')]
-
-    #     sums = ""
-
-    #     for i in range(len(size_bounds) - 1):
-    #         delim = size_bounds[i][0]
-    #         sign = size_bounds[i][1]
-
-    #         if sum_size >= delim:
-    #             sums = f'~ {round(sum_size / delim, 1)} {sign}'
-    #             break
-
-    #     self.win.set_status("%s  bites    %s" % (utils.format_size(sum_size), sums))
-    #     self.win.stop_calculation()
-    #     self.status = ActionStatus.WAIT
+    result = compare_dirs(dir_a, dir_b, _add_new_item)
+    _main_window.stop_compare()
+    _action_status = ActionStatus.WAIT
 
 
     # def break_calculation_handler(self):
@@ -131,13 +90,44 @@ class AppActions:
     #                         f"File or dir '{file_name}' will be deleted, do continue?",
     #                         do_delete)
 
-    def open_dir_handler(self, letter):
-        if self.status == ActionStatus.RUN: return
+def _open_dir_handler(letter):
+    global _main_window
+    global _action_status
 
-        def on_select_dir(dir):
-            self.file_ops.set_dir(letter, dir)
-            self.win.set_dir(letter, dir)
+    if _action_status == ActionStatus.RUN: return
 
-        show_open_dir_dialog(self.win,
-                             self.file_ops.get_dir(letter),
-                             on_select_dir)
+    show_open_dir_dialog(_main_window,
+                         _main_window.get_dir(letter),
+                         lambda dir: _main_window.set_dir(letter, dir))
+
+
+_actions = [
+    ('quit', _quit_handler),
+    ('compare-dirs', _compare_handler),
+    # ('calculate-sizes', self.calculate_handler),
+    # ('delete-selected-file', self.delete_handler),
+    # ('break-calculation', self.break_calculation_handler),
+    # ('dirsize-selected-file', self.dirsize_handler),
+    # ('open-selected-file', self.open_handler),
+    ('select-dir-a', lambda: _open_dir_handler('a')),
+    ('select-dir-b', lambda: _open_dir_handler('b')),
+]
+
+
+def init_actions(app, win):
+    global _main_window
+    global _action_status
+    _action_status = ActionStatus.WAIT
+    _main_window = win
+
+    def _create_act(name, keys, fn):
+        # we need pass name, keys, fn as values into a separate function
+        # to decouple them from mutable iterators
+        act = Gio.SimpleAction(name=name)
+        act.connect('activate', lambda *_: fn())
+        app.add_action(act)
+        app.set_accels_for_action("app.%s" % name, keys)
+
+    for act, handler in _actions:
+        key = shortcuts[act]  if act in shortcuts else ""
+        _create_act(act, [key], handler)
