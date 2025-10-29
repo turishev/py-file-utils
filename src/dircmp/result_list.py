@@ -1,4 +1,6 @@
 import gi
+from time import localtime, strftime
+
 
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk, Gio, GObject
@@ -22,10 +24,10 @@ class DataObject(GObject.GObject):
     time_b = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
     owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     owner_b = GObject.Property(type=GObject.TYPE_STRING, default="")
-    perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    # perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    # perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
 
-    def __init__(self, name, diff, type_a, type_b, size_a, size_b):#TODO
+    def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b, owner_a='', owner_b=''):
         super().__init__()
         self.name = name
         self.diff = diff
@@ -33,9 +35,15 @@ class DataObject(GObject.GObject):
         self.type_b = type_b
         self.size_a = size_a
         self.size_b = size_b
+        self.owner_a = owner_a
+        self.owner_b = owner_b
+        self.time_a = time_a
+        self.time_b = time_b
 
+def _format_time(tm):
+    return strftime("%Y-%m-%d %H:%M:%S", localtime(tm))
 
-def create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
+def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", setup_fn)
     factory.connect("bind", bind_fn)
@@ -54,19 +62,23 @@ class ResultList():
         self.store = Gio.ListStore(item_type=DataObject)
         self.list_view = Gtk.ColumnView()
 
-        name_col = create_list_column("Name", "name", self.setup_name, self.bind_name, "str")
+        name_col = _create_list_column("Name", "name", self.setup_name, self.bind_name, "str")
         name_col.set_expand(True)
         self.list_view.append_column(name_col)
-        self.list_view.append_column(create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "str"))
-        self.list_view.append_column(create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "num"))
-        self.list_view.append_column(create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "num"))
-        self.list_view.append_column(create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "num"))
-        self.list_view.append_column(create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "num"))
+        self.list_view.append_column(_create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "str"))
+        self.list_view.append_column(_create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "num"))
+        self.list_view.append_column(_create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "num"))
+        self.list_view.append_column(_create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "num"))
+        self.list_view.append_column(_create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "num"))
 
-        self.list_view.append_column(create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "str"))
-        self.list_view.append_column(create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "str"))
-        self.list_view.append_column(create_list_column("A size", "size_a", self.setup_size_a, self.bind_size_a, "num"))
-        self.list_view.append_column(create_list_column("B size", "size_b", self.setup_size_b, self.bind_size_b, "num"))
+        self.list_view.append_column(_create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "str"))
+        self.list_view.append_column(_create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "str"))
+        self.list_view.append_column(_create_list_column("A size", "size_a", self.setup_size_a, self.bind_size_a, "num"))
+        self.list_view.append_column(_create_list_column("B size", "size_b", self.setup_size_b, self.bind_size_b, "num"))
+        self.list_view.append_column(_create_list_column("A time", "time_a", self.setup_time_a, self.bind_time_a, "num"))
+        self.list_view.append_column(_create_list_column("B time", "time_b", self.setup_time_b, self.bind_time_b, "num"))
+        self.list_view.append_column(_create_list_column("A owner", "owner_a", self.setup_owner_a, self.bind_owner_a, "str"))
+        self.list_view.append_column(_create_list_column("B owner", "owner_b", self.setup_owner_b, self.bind_owner_b, "str"))
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
@@ -79,11 +91,11 @@ class ResultList():
     #     self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
     #     self.list_view.connect("activate", self.on_activate);
 
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567))
-        self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444))
-        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567, 123.456, 121.456, "aaa", "bbb"))
+        self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456, 1761235050.4936545, 123.456))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567, 123.456, 123.456))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444, 1741622985.4395833, 123.456))
+        self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456, 12.456, 123.456))
 
     def setup_name(self, factory, item):
         label = Gtk.Label()
@@ -151,9 +163,57 @@ class ResultList():
         obj = item.get_item()
         label.set_text(obj.diff)
 
+    def setup_owner_a(self, factory, item):
+        label = Gtk.Label()
+        # label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_owner_a(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.owner_a)
+
+    def setup_owner_b(self, factory, item):
+        label = Gtk.Label()
+        # label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_owner_b(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(obj.owner_b)
+
+    def setup_time_a(self, factory, item):
+        label = Gtk.Label()
+        # label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_time_a(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(_format_time(obj.time_a))
+
+    def setup_time_b(self, factory, item):
+        label = Gtk.Label()
+        # label.set_xalign(0.5)
+        item.set_child(label)
+        self.connect_menu(label, item)
+
+    def bind_time_b(self, factory, item):
+        label = item.get_child()
+        obj = item.get_item()
+        label.set_text(_format_time(obj.time_b))
+
     def setup_a_to_b(self, factory, item):
+        def on_toogle(_):
+            item.get_item().a_to_b = 0 if item.get_item().a_to_b == 1 else 1
+
         cb = Gtk.CheckButton()
         item.set_child(cb)
+        cb.connect('toggled', on_toogle)
         #self.connect_menu(cb, item)
 
     def bind_a_to_b(self, factory, item):
@@ -162,7 +222,11 @@ class ResultList():
         cb.set_active(obj.a_to_b > 0)
 
     def setup_b_to_a(self, factory, item):
+        def on_toogle(_):
+            item.get_item().b_to_a = 0 if item.get_item().b_to_a == 1 else 1
+
         cb = Gtk.CheckButton()
+        cb.connect('toggled', on_toogle)
         item.set_child(cb)
         #self.connect_menu(cb, item)
 
@@ -172,7 +236,11 @@ class ResultList():
         cb.set_active(obj.b_to_a > 0)
 
     def setup_del_a(self, factory, item):
+        def on_toogle(_):
+            item.get_item().del_a = 0 if item.get_item().del_a == 1 else 1
+
         cb = Gtk.CheckButton()
+        cb.connect('toggled', on_toogle)
         item.set_child(cb)
         #self.connect_menu(cb, item)
 
@@ -182,7 +250,11 @@ class ResultList():
         cb.set_active(obj.del_a > 0)
 
     def setup_del_b(self, factory, item):
+        def on_toogle(_):
+            item.get_item().del_b = 0 if item.get_item().del_b == 1 else 1
+
         cb = Gtk.CheckButton()
+        cb.connect('toggled', on_toogle)
         item.set_child(cb)
         #self.connect_menu(cb, item)
 
@@ -208,13 +280,17 @@ class ResultList():
     #         #print("No item selected")
     #         pass
 
-    def append(self, name, diff, type_a, type_b, size_a, size_b):
+    def append(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b, owner_a, owner_b):
         obj = DataObject(name,
                          diff,
                          type_a,
                          type_b,
                          -1 if size_a is None else size_a,
-                         -1 if size_b is None else size_b
+                         -1 if size_b is None else size_b,
+                         time_a,
+                         time_b,
+                         owner_a,
+                         owner_b
                          )
         
         self.store.append(obj)
