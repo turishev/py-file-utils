@@ -10,10 +10,10 @@ class DataObject(GObject.GObject):
 
     name = GObject.Property(type=GObject.TYPE_STRING, default="")
     diff = GObject.Property(type=GObject.TYPE_STRING, default="")
-    a_to_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
-    del_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
-    b_to_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
-    del_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    a_to_b = GObject.Property(type=GObject.TYPE_UINT, default=0)
+    del_a = GObject.Property(type=GObject.TYPE_UINT, default=0)
+    b_to_a = GObject.Property(type=GObject.TYPE_UINT, default=0)
+    del_b = GObject.Property(type=GObject.TYPE_UINT, default=0)
     type_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     type_b = GObject.Property(type=GObject.TYPE_STRING, default="")
     size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1)
@@ -34,21 +34,17 @@ class DataObject(GObject.GObject):
         self.size_a = size_a
         self.size_b = size_b
 
+
 def create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", setup_fn)
     factory.connect("bind", bind_fn)
     exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
 
-    bool_sort_fn = lambda a,b,_: 0 if a == b else (1 if a else -1)
-    
-    if sorter_type == "number": sorter = Gtk.NumericSorter(expression=exp)
-    elif sorter_type == "bool": sorter = Gtk.CustomSorter.new(sort_func=bool_sort_fn)
-    else: sorter = Gtk.StringSorter(expression=exp) # "string"
+    if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
+    elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp)
+    else: sorter = None
 
-    print(name)
-    print(data_field)
-    print(sorter)
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
     column.set_sorter(sorter)
     return column
@@ -58,19 +54,19 @@ class ResultList():
         self.store = Gio.ListStore(item_type=DataObject)
         self.list_view = Gtk.ColumnView()
 
-        name_col = create_list_column("Name", "name", self.setup_name, self.bind_name, "string")
+        name_col = create_list_column("Name", "name", self.setup_name, self.bind_name, "str")
         name_col.set_expand(True)
         self.list_view.append_column(name_col)
-        self.list_view.append_column(create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "string"))
-        self.list_view.append_column(create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "bool"))
-        self.list_view.append_column(create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "bool"))
-        self.list_view.append_column(create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "bool"))
-        self.list_view.append_column(create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "bool"))
+        self.list_view.append_column(create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "str"))
+        self.list_view.append_column(create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "num"))
+        self.list_view.append_column(create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "num"))
+        self.list_view.append_column(create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "num"))
+        self.list_view.append_column(create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "num"))
 
-        self.list_view.append_column(create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "string"))
-        self.list_view.append_column(create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "string"))
-        self.list_view.append_column(create_list_column("A size", "type_a", self.setup_size_a, self.bind_size_a, "number"))
-        self.list_view.append_column(create_list_column("B size", "type_b", self.setup_size_b, self.bind_size_b, "number"))
+        self.list_view.append_column(create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "str"))
+        self.list_view.append_column(create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "str"))
+        self.list_view.append_column(create_list_column("A size", "size_a", self.setup_size_a, self.bind_size_a, "num"))
+        self.list_view.append_column(create_list_column("B size", "size_b", self.setup_size_b, self.bind_size_b, "num"))
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
@@ -88,7 +84,6 @@ class ResultList():
         self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567))
         self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444))
         self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456))
-
 
 
     def setup_name(self, factory, item):
@@ -135,8 +130,7 @@ class ResultList():
         label = item.get_child()
         obj = item.get_item()
         #label.set_text(utils.format_size(obj.size_a))
-        # label.set_text(str(obj.size_a) if obj.size_a >= 0 else '') # -1 is size unknown
-        label.set_text(str(obj.size_a)) # -1 is size unknown
+        label.set_text(str(obj.size_a) if obj.size_a >= 0 else '') # -1 is size unknown
 
     def setup_size_b(self, factory, item):
         label = Gtk.Label()
@@ -169,7 +163,7 @@ class ResultList():
     def bind_a_to_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.a_to_b)
+        cb.set_active(obj.a_to_b > 0)
 
     def setup_b_to_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -179,7 +173,7 @@ class ResultList():
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.b_to_a)
+        cb.set_active(obj.b_to_a > 0)
 
     def setup_del_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -189,7 +183,7 @@ class ResultList():
     def bind_del_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.del_a)
+        cb.set_active(obj.del_a > 0)
 
     def setup_del_b(self, factory, item):
         cb = Gtk.CheckButton()
@@ -199,7 +193,7 @@ class ResultList():
     def bind_del_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.del_b)
+        cb.set_active(obj.del_b > 0)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
