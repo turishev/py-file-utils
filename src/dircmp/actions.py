@@ -119,7 +119,7 @@ def _open_dir_handler(letter):
 _actions = [
     ('quit', _quit_handler),
     ('compare-dirs', _compare_handler),
-    ('exec-operation', _exec_handler),
+    ('exec-operations', _exec_handler),
     # ('calculate-sizes', self.calculate_handler),
     # ('delete-selected-file', self.delete_handler),
     # ('break-calculation', self.break_calculation_handler),

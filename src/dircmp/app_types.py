@@ -16,34 +16,27 @@ class FileInfo:
     owner : str
     time : float
 
-
-@enum.unique
-class DiffType(enum.Enum):
-    EQ = 0
-    A = 1
-    B = 2
-    TIME = 3
-    SIZE = 4
-    TYPE = 5
-    OWNER = 6
-    CONTENT = 7
-
-
 @dataclass(frozen=True, slots=True)
 class CompareResultItem:
     name : str
-    diff : DiffType
+    diff : str
     file_a : FileInfo | None
     file_b : FileInfo | None
 
 
 @enum.unique
 class OperType(enum.Enum):
-    COPY = 0
-    MOVE = 1
+    NOTHING = 0
+    COPY_AB = 1
+    COPY_BA = 2
+    MOVE_AB = 3
+    MOVE_BA = 4
+    DEL_A = 5
+    DEL_B = 6
+    DEL_AB = 7
 
 @dataclass(frozen=True, slots=True)
 class Oper:
     type : OperType
-    src : Path
-    dst : Path
+    path_a : str
+    path_b : str

@@ -26,12 +26,17 @@ class DataObject(GObject.GObject):
     size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1)
     time_a = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
     time_b = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
-    owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    owner_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    # owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    # owner_b = GObject.Property(type=GObject.TYPE_STRING, default="")
     # perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     # perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    path_a = GObject.Property(type=GObject.TYPE_STRING, default="")
+    path_b = GObject.Property(type=GObject.TYPE_STRING, default="")
 
-    def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b, owner_a='', owner_b=''):
+    def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b,
+                 path_a, path_b,
+                 # owner_a='', owner_b=''
+                 ):
         super().__init__()
         self.name = name
         self.diff = diff
@@ -39,27 +44,33 @@ class DataObject(GObject.GObject):
         self.type_b = type_b
         self.size_a = size_a
         self.size_b = size_b
-        self.owner_a = owner_a
-        self.owner_b = owner_b
+        # self.owner_a = owner_a
+        # self.owner_b = owner_b
         self.time_a = time_a
         self.time_b = time_b
+        self.path_a = path_a
+        self.path_b = path_b
 
-def _diff_letter(diff : DiffType):
-    diff_map = {
-        DiffType.EQ.value : '=',
-        DiffType.A.value : 'A',
-        DiffType.B.value : 'B',
-        DiffType.TIME.value : 't',
-        DiffType.SIZE.value : 's',
-        DiffType.TYPE.value : 'f',
-        DiffType.OWNER.value : 'o',
-        DiffType.CONTENT.value : 'c',
-    }
-    return diff_map.get(diff.value, '?')
 
 def _format_time(tm):
     return strftime("%Y-%m-%d %H:%M:%S", localtime(tm))
 
+def _get_op_type(a_to_b : bool, b_to_a : bool, del_a : bool, del_b : bool) -> OperType:
+    if a_to_b:
+        if b_to_a or del_b: return OperType.NOTHING
+        elif del_a: return OperType.MOVE_AB
+        else: return OperType.COPY_AB
+    elif b_to_a:
+        if del_a: return OperType.NOTHING
+        elif del_b: return OperType.MOVE_BA
+        else: return OperType.COPY_BA
+    elif del_a and del_b: return OperType.DEL_AB
+    else:
+        if del_a: return OperType.DEL_A
+        elif del_b: return OperType.DEL_B
+        else: return OperType.NOTHING
+
+    
 def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", setup_fn)
@@ -94,8 +105,8 @@ class ResultList():
         self.list_view.append_column(_create_list_column("B size", "size_b", self.setup_size_b, self.bind_size_b, "num"))
         self.list_view.append_column(_create_list_column("A time", "time_a", self.setup_time_a, self.bind_time_a, "num"))
         self.list_view.append_column(_create_list_column("B time", "time_b", self.setup_time_b, self.bind_time_b, "num"))
-        self.list_view.append_column(_create_list_column("A owner", "owner_a", self.setup_owner_a, self.bind_owner_a, "str"))
-        self.list_view.append_column(_create_list_column("B owner", "owner_b", self.setup_owner_b, self.bind_owner_b, "str"))
+        # self.list_view.append_column(_create_list_column("A owner", "owner_a", self.setup_owner_a, self.bind_owner_a, "str"))
+        # self.list_view.append_column(_create_list_column("B owner", "owner_b", self.setup_owner_b, self.bind_owner_b, "str"))
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
@@ -300,15 +311,17 @@ class ResultList():
 
     def append(self, item : CompareResultItem):
         obj = DataObject(item.name,
-                         _diff_letter(item.diff),
+                         item.diff,
                          '' if item.file_a is None else item.file_a.type,
                          '' if item.file_b is None else item.file_b.type,
                          -1 if item.file_a is None else item.file_a.size,
                          -1 if item.file_b is None else item.file_b.size,
                          -1 if item.file_a is None else item.file_a.time,
                          -1 if item.file_b is None else item.file_b.time,
-                         '' if item.file_a is None else item.file_a.owner,
-                         '' if item.file_b is None else item.file_b.owner
+                         # '' if item.file_a is None else item.file_a.owner,
+                         # '' if item.file_b is None else item.file_b.owner
+                         '' if item.file_a is None else item.file_a.path,
+                         '' if item.file_b is None else item.file_b.path,
                          )
 
         self.store.append(obj)
@@ -380,8 +393,16 @@ class ResultList():
     #     self.delete_item(item)
 
     def get_oper_list(self):
-        print("get_oper_list")
+        result = []
+        pos = 0
         while True:
-            item = self.store.get_item()
-            print(f"item:{item}")
-            if item is None: return
+            item = self.store.get_item(pos)
+            pos = pos + 1
+            if item is None:
+                break
+            else:
+                optype = _get_op_type(item.a_to_b, item.b_to_a, item.del_a, item.del_b)
+                if optype != OperType.NOTHING:
+                    result.append(Oper(optype, item.path_a, item.path_b))
+
+        return result

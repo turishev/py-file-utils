@@ -34,15 +34,18 @@ def _get_file_info(path : Path):
     )
 
 
-def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> DiffType:
-    if info_a is None and info_b is None: return DiffType.EQ
-    elif info_a is None and info_b is not None: return DiffType.B
-    elif info_a is not None and info_b is None: return DiffType.A
-    elif info_a.type != info_b.type: return DiffType.TYPE
-    elif info_a.time != info_b.time: return DiffType.TIME
-    elif info_a.size != info_b.size: return DiffType.SIZE
-    elif info_a.owner != info_b.owner: return DiffType.OWNER
-    else: return DiffType.EQ
+def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> str:
+    if info_a is None and info_b is None: return ''
+    if info_a is None and info_b is not None: return 'B'
+    if info_a is not None and info_b is None: return 'A'
+
+    res = ''
+
+    if info_a.size != info_b.size: res = res + 's'
+    if info_a.type != info_b.type: res = res + 'f'
+    if info_a.time != info_b.time: res = res + 't'
+    # if info_a.owner != info_b.owner: res = res + 'o'
+    return res
 
 
 def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={},
@@ -69,7 +72,7 @@ def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={},
                 file_b = info_b if not reverse_dir else info_a
                 item = CompareResultItem(name=name, diff=diff, file_a=file_a, file_b=file_b)
                 result[name] = item
-                if on_item is not None and diff != DiffType.EQ: on_item(item)
+                if on_item is not None and diff != '': on_item(item)
 
 
 def compare_dirs(dir_a : str, dir_b : str,
@@ -83,7 +86,7 @@ def compare_dirs(dir_a : str, dir_b : str,
     result={}
     _compare_dirs(adir_a, adir_b, False, result, on_item)
     _compare_dirs(adir_b, adir_a, True, result, on_item)
-    return [v for v in result.values() if v.diff != DiffType.EQ]
+    return [v for v in result.values() if v.diff != ''] # return only different files
 
 
 def stop_calculation():

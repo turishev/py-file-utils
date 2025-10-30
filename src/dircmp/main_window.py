@@ -115,16 +115,18 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def start_compare(self):
         self.compare_bt.set_sensitive(False);
-        self.result_list.clear()
+        self.execute_bt.set_sensitive(False)
+        self.dir_a_bt.set_sensitive(False);
+        self.dir_b_bt.set_sensitive(False);
         # self.abort_bt.set_sensitive(True);
-        # self.open_bt.set_sensitive(False);
-        # self.result_list.clear()
+        self.result_list.clear()
 
     def stop_compare(self):
         self.compare_bt.set_sensitive(True);
-    #     self.calc_bt.set_sensitive(True);
+        self.execute_bt.set_sensitive(True)
     #     self.abort_bt.set_sensitive(False);
-    #     self.open_bt.set_sensitive(True);
+        self.dir_a_bt.set_sensitive(True);
+        self.dir_b_bt.set_sensitive(True);
 
     def set_dir(self, letter, dir):
         if letter == 'a': self.dir_a_entry.set_text(dir)
@@ -138,3 +140,6 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def append_to_list(self, item  : CompareResultItem):
         self.result_list.append(item)
+
+    def get_oper_list(self):
+        return self.result_list.get_oper_list()
