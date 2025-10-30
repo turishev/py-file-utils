@@ -33,8 +33,8 @@ class DiffType(enum.Enum):
 class CompareResultItem:
     name : str
     diff : DiffType
-    file_a : FileInfo
-    file_b : FileInfo
+    file_a : FileInfo | None
+    file_b : FileInfo | None
 
 
 @enum.unique

@@ -298,19 +298,19 @@ class ResultList():
     #         pass
 
 
-    def _append(self, item : CompareResultItem):
+    def append(self, item : CompareResultItem):
         obj = DataObject(item.name,
                          _diff_letter(item.diff),
-                         item.file_a.type,
-                         item.file_b.type,
-                         -1 if item.file_a.size is None else item.file_a.size,
-                         -1 if item.file_b.size is None else item.file_b.size,
-                         item.file_a.time,
-                         item.file_b.time,
-                         item.file_a.owner,
-                         item.file_b.owner
+                         '' if item.file_a is None else item.file_a.type,
+                         '' if item.file_b is None else item.file_b.type,
+                         -1 if item.file_a is None else item.file_a.size,
+                         -1 if item.file_b is None else item.file_b.size,
+                         -1 if item.file_a is None else item.file_a.time,
+                         -1 if item.file_b is None else item.file_b.time,
+                         '' if item.file_a is None else item.file_a.owner,
+                         '' if item.file_b is None else item.file_b.owner
                          )
-        
+
         self.store.append(obj)
         # model = self.selection
         # model.select_item(0, True)
@@ -318,8 +318,8 @@ class ResultList():
         #                          self.name_column,
         #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
 
-    # def clear(self):
-    #     self.store.remove_all()
+    def clear(self):
+        self.store.remove_all()
 
     def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
                                    x : float, y : float, cell : Gtk.ColumnViewCell):
@@ -384,4 +384,4 @@ class ResultList():
         while True:
             item = self.store.get_item()
             print(f"item:{item}")
-            if item is None: return 
+            if item is None: return

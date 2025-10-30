@@ -46,10 +46,9 @@ def _compare_handler():
     dir_a = _main_window.get_dir('a')
     dir_b = _main_window.get_dir('b')
 
-    def _add_new_item(key: str, item : tuple[str, FileInfo, FileInfo]):
-        # self.win.result_list.append(name, type, size)
-        print(f"key: {key}\ndata: {item}")
-        _main_window.append_to_list(key, item[0], item[1].type, item[2].type, item[1].size, item[2].size)
+    def _add_new_item(item : CompareResultItem):
+        print(f"_add_new_item: {item}")
+        _main_window.append_to_list(item)
         _update_ui()
 
     result = compare_dirs(dir_a, dir_b, _add_new_item)

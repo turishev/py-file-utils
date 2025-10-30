@@ -1,6 +1,7 @@
 from __future__ import annotations # for list annotations
 from typing import TypeAlias
-# from dataclasses import dataclass
+from collections.abc import Callable
+
 
 import pwd
 import grp
@@ -44,7 +45,8 @@ def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None) -> DiffTyp
     else: return DiffType.EQ
 
 
-def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={}, on_item=None):
+def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={},
+                  on_item : Callable[[CompareResultItem], None] | None =None):
     global _break_walk
     dir_a_len = len(str(dir_a))
 
@@ -55,22 +57,24 @@ def _compare_dirs(dir_a : Path, dir_b : Path, reverse_dir=False, result={}, on_i
         cur_dir_b = Path(str(dir_b) + sub_dir)
 
         for f in files:
-            key = (sub_dir[1:] if sub_dir != '' and sub_dir[0] == '/' else sub_dir) + f
+            name = (sub_dir[1:] if sub_dir != '' and sub_dir[0] == '/' else sub_dir) + f
 
-            if result.get(key) is None:
+            if result.get(name) is None:
                 path_a = pcur_dir / f
                 path_b = (cur_dir_b / f).resolve()
                 info_a = _get_file_info(path_a)
                 info_b = _get_file_info(path_b) if path_b.exists() else None
-                comp_res = _compare_info(info_b, info_a) if reverse_dir else _compare_info(info_a, info_b)
+                diff = _compare_info(info_b, info_a) if reverse_dir else _compare_info(info_a, info_b)
+                file_a = info_a if not reverse_dir else info_b
+                file_b = info_b if not reverse_dir else info_a
+                item = CompareResultItem(name=name, diff=diff, file_a=file_a, file_b=file_b)
+                result[name] = item
+                if on_item is not None and diff != DiffType.EQ: on_item(item)
 
-                if comp_res != DiffType.EQ:
-                    item = (comp_res, info_a, info_b)
-                    result[key] = item
-                    if on_item is not None: on_item(key, item)
 
-
-def compare_dirs(dir_a : str, dir_b : str, on_item=None):
+def compare_dirs(dir_a : str, dir_b : str,
+                 on_item : Callable[[CompareResultItem], None] | None =None
+                 ) -> list[CompareResultItem]:
     global _break_walk
 
     adir_a = Path(dir_a).resolve()
@@ -79,7 +83,7 @@ def compare_dirs(dir_a : str, dir_b : str, on_item=None):
     result={}
     _compare_dirs(adir_a, adir_b, False, result, on_item)
     _compare_dirs(adir_b, adir_a, True, result, on_item)
-    return [CompareResultItem(k, result[k][0], result[k][1], result[k][2]) for k in result.keys()]
+    return [v for v in result.values() if v.diff != DiffType.EQ]
 
 
 def stop_calculation():

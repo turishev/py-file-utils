@@ -1,8 +1,13 @@
+from __future__ import annotations # for list annotations
+from typing import TypeAlias
+
 import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, Adw
 
+
+from app_types import *
 from shortcuts import shortcuts
 from result_list import ResultList
 
@@ -110,6 +115,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def start_compare(self):
         self.compare_bt.set_sensitive(False);
+        self.result_list.clear()
         # self.abort_bt.set_sensitive(True);
         # self.open_bt.set_sensitive(False);
         # self.result_list.clear()
@@ -130,6 +136,5 @@ class MainWindow(Gtk.ApplicationWindow):
         if letter == 'a': return self.dir_a_entry.get_text()
         else: return self.dir_b_entry.get_text()
 
-
-    def append_to_list(self, name, diff, type_a, type_b, size_a, size_b):
-        self.result_list.append(name, diff, type_a, type_b, size_a, size_b)
+    def append_to_list(self, item  : CompareResultItem):
+        self.result_list.append(item)
