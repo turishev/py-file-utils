@@ -40,3 +40,16 @@ class Oper:
     type : OperType
     path_a : str
     path_b : str
+
+@enum.unique
+class SyncDirection(enum.Enum):
+    BOTH = 0
+    A_TO_B = 1
+    B_TO_A = 2
+    
+@dataclass(frozen=True, slots=True)
+class SyncOptions:
+    sync_direction : SyncDirection
+    check_size : bool
+    check_time : bool
+    check_content : bool

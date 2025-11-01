@@ -19,6 +19,7 @@ class MyApp(Adw.Application):
         print('app: on_activate')
         win = MainWindow(application=app)
         init_actions(self, win)
+        win.after_init() # after init_actions
         win.present()
-        # self.win.after_init()
+
 

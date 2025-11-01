@@ -410,3 +410,6 @@ class ResultList():
                     result.append(Oper(optype, item.path_a, item.path_b))
 
         return result
+
+    def get_list_len(self):
+        return len(self.store)

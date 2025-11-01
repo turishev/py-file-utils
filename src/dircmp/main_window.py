@@ -11,6 +11,57 @@ from app_types import *
 from shortcuts import shortcuts
 from result_list import ResultList
 
+class OptionsPanel():
+    sync_types = [
+        ('A<->B', SyncDirection.BOTH),
+        ('A->B', SyncDirection.A_TO_B),
+        ('B->A', SyncDirection.B_TO_A)
+    ]
+    def __init__(self):
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        # self.box.set_homogeneous(True)
+        self.box.set_margin_top(8)
+        self.box.set_margin_start(8)
+        self.box.set_margin_end(8)
+
+        self.sync_type_selector = Gtk.DropDown.new_from_strings([v[0] for v in self.sync_types])
+        self.box.append(self.sync_type_selector)
+
+        box_1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_1.set_margin_start(12)
+        self.size_cb = Gtk.CheckButton()
+        self.size_cb.set_active(True)
+        box_1.append(self.size_cb)
+        box_1.append(Gtk.Label.new_with_mnemonic('check size'))
+        self.box.append(box_1)
+
+        box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_3.set_margin_start(12)
+        self.time_cb = Gtk.CheckButton()
+        self.time_cb.set_active(True)
+        box_3.append(self.time_cb)
+        box_3.append(Gtk.Label.new_with_mnemonic('check time'))
+        self.box.append(box_3)
+
+        box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_3.set_margin_start(12)
+        self.content_cb = Gtk.CheckButton()
+        box_3.append(self.content_cb)
+        box_3.append(Gtk.Label.new_with_mnemonic('check content'))
+        self.box.append(box_3)
+
+    def get_box(self):
+        return self.box
+
+    def get_options(self) -> SyncOptions:
+        sync_type_inx = self.sync_type_selector.get_selected()
+        sync_dir = self.sync_types[sync_type_inx][1]
+        return SyncOptions(sync_direction=sync_dir,
+                           check_size=self.size_cb.get_active(),
+                           check_time=self.time_cb.get_active(),
+                           check_content=self.content_cb.get_active())
+
+
 class MainWindow(Gtk.ApplicationWindow):
     app_title = "dircmp"
 
@@ -18,7 +69,7 @@ class MainWindow(Gtk.ApplicationWindow):
         super().__init__(*args, **kwargs)
 
         self.root_dir = None
-        self.set_default_size(800, 600)
+        self.set_default_size(1024, 800)
         self.set_title(self.app_title)
 
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -52,7 +103,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_entry = Gtk.Entry()
         self.dir_b_entry.set_hexpand(True)
         self.dir_b_box.append(self.dir_b_entry);
-        
+
+        self.options_box = OptionsPanel()
+        self.main_box.append(self.options_box.get_box())
+
         self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.center_box.set_margin_start(8)
         self.center_box.set_margin_end(8)
@@ -87,6 +141,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.execute_bt.set_sensitive(False)
         self.bottom_box.append(self.execute_bt)
 
+        self.break_bt = self.make_button("Break", "break-operations")
+        self.break_bt.set_sensitive(False)
+        self.bottom_box.append(self.break_bt)
+
         self.close_bt = self.make_button("Close", "quit")
         self.bottom_box.append(self.close_bt)
 
@@ -100,9 +158,11 @@ class MainWindow(Gtk.ApplicationWindow):
     #     # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
 
-    # def after_init(self):
-    #     print('after_init')
-    #     self.abort_bt.set_sensitive(False); # this one doesn't work in __init__
+    def after_init(self):
+        print('after_init')
+         # this doesn't work in __init__
+        self.break_bt.set_sensitive(False);
+        self.execute_bt.set_sensitive(False)
 
     def make_button(self, label, action):
         shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
@@ -114,19 +174,30 @@ class MainWindow(Gtk.ApplicationWindow):
         self.status_label.set_text(text)
 
     def start_compare(self):
-        self.compare_bt.set_sensitive(False);
+        self.compare_bt.set_sensitive(False)
         self.execute_bt.set_sensitive(False)
-        self.dir_a_bt.set_sensitive(False);
-        self.dir_b_bt.set_sensitive(False);
-        # self.abort_bt.set_sensitive(True);
+        self.dir_a_bt.set_sensitive(False)
+        self.dir_b_bt.set_sensitive(False)
+        self.break_bt.set_sensitive(True)
         self.result_list.clear()
+        self.set_status('Comparing..')
 
-    def stop_compare(self):
-        self.compare_bt.set_sensitive(True);
-        self.execute_bt.set_sensitive(True)
-    #     self.abort_bt.set_sensitive(False);
-        self.dir_a_bt.set_sensitive(True);
-        self.dir_b_bt.set_sensitive(True);
+    def execute_operations(self, oper_list):
+        self.compare_bt.set_sensitive(False)
+        self.execute_bt.set_sensitive(False)
+        self.dir_a_bt.set_sensitive(False)
+        self.dir_b_bt.set_sensitive(False)
+        self.break_bt.set_sensitive(True)
+        self.set_status('Executing..')
+
+    def stop_operations(self, is_abort=False):
+        self.compare_bt.set_sensitive(True)
+        if self.result_list.get_list_len() > 0: self.execute_bt.set_sensitive(True)
+        self.break_bt.set_sensitive(False)
+        self.dir_a_bt.set_sensitive(True)
+        self.dir_b_bt.set_sensitive(True)
+        if is_abort: self.set_status('Aborted')
+        else: self.set_status('Finished')
 
     def set_dir(self, letter, dir):
         if letter == 'a': self.dir_a_entry.set_text(dir)
@@ -140,6 +211,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def append_to_list(self, item  : CompareResultItem):
         self.result_list.append(item)
+
+    def get_sync_options(self) -> SyncOptions:
+        return self.options_box.get_options()
 
     def get_oper_list(self):
         return self.result_list.get_oper_list()

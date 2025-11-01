@@ -45,14 +45,17 @@ def _compare_handler():
 
     dir_a = _main_window.get_dir('a')
     dir_b = _main_window.get_dir('b')
+    opts = _main_window.get_sync_options()
+
+    print(f"compare opts:{opts}")
 
     def _add_new_item(item : CompareResultItem):
         print(f"_add_new_item: {item}")
         _main_window.append_to_list(item)
         _update_ui()
 
-    result = compare_dirs(dir_a, dir_b, _add_new_item)
-    _main_window.stop_compare()
+    result = compare_dirs(dir_a, dir_b, opts, _add_new_item)
+    _main_window.stop_operations()
     _action_status = ActionStatus.WAIT
 
 def _exec_handler():
@@ -61,20 +64,20 @@ def _exec_handler():
 
     if _action_status == ActionStatus.RUN: return
     _action_status = ActionStatus.RUN
-    # _main_window.start_compare()
 
-    opers = _main_window.get_oper_list()
-    print(f"operlist:{opers}")
-    # _main_window.stop_compare()
+    oper_list = _main_window.get_oper_list()
+    print(f"oper_list:{oper_list}")
+    _main_window.execute_operations(oper_list)
+    _main_window.stop_operations()
     _action_status = ActionStatus.WAIT
 
 
-    # def break_calculation_handler(self):
-    #     print('stop_calculation_handler')
-    #     if not self.status == ActionStatus.RUN: return
-    #     self.file_ops.stop_calculation()
-    #     self.win.set_status("Calculation aborted")
-    #     self.status = ActionStatus.WAIT
+def _break_operations_handler():
+    global _main_window
+    global _action_status
+    if _action_status != ActionStatus.RUN: return
+    _main_window.stop_operations(is_abort=True)
+    _action_status = ActionStatus.WAIT
 
 
     # def open_handler(self):
@@ -120,11 +123,7 @@ _actions = [
     ('quit', _quit_handler),
     ('compare-dirs', _compare_handler),
     ('exec-operations', _exec_handler),
-    # ('calculate-sizes', self.calculate_handler),
-    # ('delete-selected-file', self.delete_handler),
-    # ('break-calculation', self.break_calculation_handler),
-    # ('dirsize-selected-file', self.dirsize_handler),
-    # ('open-selected-file', self.open_handler),
+    ('break-operations', _break_operations_handler),
     ('select-dir-a', lambda: _open_dir_handler('a')),
     ('select-dir-b', lambda: _open_dir_handler('b')),
 ]
