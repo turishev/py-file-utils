@@ -247,7 +247,8 @@ class ResultList():
     def bind_a_to_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.a_to_b > 0)
+        if obj.diff == 'B': cb.set_sensitive(False)
+        else:  cb.set_active(obj.a_to_b > 0)
 
     def setup_b_to_a(self, factory, item):
         def on_toogle(_):
@@ -261,7 +262,8 @@ class ResultList():
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.b_to_a > 0)
+        if obj.diff == 'A': cb.set_sensitive(False)
+        else: cb.set_active(obj.b_to_a > 0)
 
     def setup_del_a(self, factory, item):
         def on_toogle(_):
@@ -275,7 +277,8 @@ class ResultList():
     def bind_del_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.del_a > 0)
+        if obj.diff == 'B': cb.set_sensitive(False)
+        else: cb.set_active(obj.del_a > 0)
 
     def setup_del_b(self, factory, item):
         def on_toogle(_):
@@ -289,7 +292,8 @@ class ResultList():
     def bind_del_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        cb.set_active(obj.del_b > 0)
+        if obj.diff == 'A': cb.set_sensitive(False)
+        else: cb.set_active(obj.del_b > 0)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
