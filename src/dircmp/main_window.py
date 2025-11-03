@@ -11,6 +11,27 @@ from app_types import *
 from shortcuts import shortcuts
 from result_list import ResultList
 
+def make_button(label, action):
+    shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
+    bt = Gtk.Button(label=f"{label} {shortcut}")
+    bt.set_action_name('app.' + action)
+    return bt
+
+class ToolsPanel():
+    def __init__(self):
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        # self.box.set_homogeneous(True)
+        self.box.set_spacing(8)
+        self.box.set_margin_top(8)
+        self.box.set_margin_start(8)
+        self.box.set_margin_end(8)
+        self.box.append(make_button('A->B', 'selected-files-a-to-b'))
+        self.box.append(make_button('Del A', 'selected-files-del-a'))
+        self.box.append(make_button('B->A', 'selected-files-b-to-a'))
+        self.box.append(make_button('Del B', 'selected-files-del-b'))
+    def get_box(self):
+        return self.box
+
 class OptionsPanel():
     sync_types = [
         ('A<->B', SyncDirection.BOTH),
@@ -92,9 +113,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.main_box.append(self.dir_a_box)
         self.main_box.append(self.dir_b_box)
-        self.dir_a_bt = self.make_button("A", "select-dir-a")
+        self.dir_a_bt = make_button("A", "select-dir-a")
 
-        self.dir_b_bt = self.make_button("B", "select-dir-b")
+        self.dir_b_bt = make_button("B", "select-dir-b")
         self.dir_a_box.append(self.dir_a_bt);
         self.dir_b_box.append(self.dir_b_bt);
         self.dir_a_entry = Gtk.Entry()
@@ -104,8 +125,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_entry.set_hexpand(True)
         self.dir_b_box.append(self.dir_b_entry);
 
+        
+        self.top_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.top_box.set_spacing(32)
+        self.top_box.set_margin_bottom(8)
+        self.main_box.append(self.top_box)
         self.options_box = OptionsPanel()
-        self.main_box.append(self.options_box.get_box())
+        self.top_box.append(self.options_box.get_box())
+        self.top_box.append(ToolsPanel().get_box())
 
         self.center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.center_box.set_margin_start(8)
@@ -134,18 +161,18 @@ class MainWindow(Gtk.ApplicationWindow):
         sw.set_child(self.result_list.list_view)
         self.result_list.list_view.grab_focus()
 
-        self.compare_bt = self.make_button("Compare", "compare-dirs")
+        self.compare_bt = make_button("Compare", "compare-dirs")
         self.bottom_box.append(self.compare_bt)
 
-        self.execute_bt = self.make_button("Execute", "exec-operations")
+        self.execute_bt = make_button("Execute", "exec-operations")
         self.execute_bt.set_sensitive(False)
         self.bottom_box.append(self.execute_bt)
 
-        self.break_bt = self.make_button("Break", "break-operations")
+        self.break_bt = make_button("Break", "break-operations")
         self.break_bt.set_sensitive(False)
         self.bottom_box.append(self.break_bt)
 
-        self.close_bt = self.make_button("Close", "quit")
+        self.close_bt = make_button("Close", "quit")
         self.bottom_box.append(self.close_bt)
 
     #     self.header = Gtk.HeaderBar()
@@ -163,12 +190,6 @@ class MainWindow(Gtk.ApplicationWindow):
          # this doesn't work in __init__
         self.break_bt.set_sensitive(False);
         self.execute_bt.set_sensitive(False)
-
-    def make_button(self, label, action):
-        shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
-        bt = Gtk.Button(label=f"{label} {shortcut}")
-        bt.set_action_name('app.' + action)
-        return bt
 
     def set_status(self, text):
         self.status_label.set_text(text)

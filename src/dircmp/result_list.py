@@ -110,7 +110,8 @@ class ResultList():
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
-        self.selection = Gtk.SingleSelection(model=self.sort_model)
+        # self.selection = Gtk.SingleSelection(model=self.sort_model)
+        self.selection = Gtk.MultiSelection(model=self.sort_model)
         # self.selection.connect("selection-changed", self.on_sel_changed)
 
         self.list_view.set_model(self.selection)
@@ -118,12 +119,6 @@ class ResultList():
         self.list_view.set_vexpand(True)
     #     self.list_view.sort_by_column(self.size_column, Gtk.SortType.DESCENDING) # Gtk.SortType.ASCENDING
     #     self.list_view.connect("activate", self.on_activate);
-
-        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10000, 4567, 123.456, 121.456, "aaa", "bbb"))
-        # self.store.append(DataObject("name-1", "A", "type-1", "type-2", 123, 456, 1761235050.4936545, 123.456))
-        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", 1234, 4567, 123.456, 123.456))
-        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -1, 444, 1741622985.4395833, 123.456))
-        # self.store.append(DataObject("name-2", "B", "type-11", "type-22", -10, 456, 12.456, 123.456))
 
     def setup_name(self, factory, item):
         label = Gtk.Label()
@@ -301,17 +296,6 @@ class ResultList():
         click.connect("pressed", self.on_mouse_right_button_down, item)
         click.connect("released", self.on_mouse_right_button_up, item)
         widget.add_controller(click)
-
-    # def on_activate(self): pass
-
-    # def on_sel_changed(self, selection, position, item):
-    #     if item is not None:
-    #         #print(f"Selected item: {selection}, {position}, {item}")
-    #         pass
-    #     else:
-    #         #print("No item selected")
-    #         pass
-
 
     def append(self, item : CompareResultItem):
         obj = DataObject(item.name,
