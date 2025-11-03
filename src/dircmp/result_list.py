@@ -70,7 +70,7 @@ def _get_op_type(a_to_b : bool, b_to_a : bool, del_a : bool, del_b : bool) -> Op
         elif del_b: return OperType.DEL_B
         else: return OperType.NOTHING
 
-    
+
 def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", setup_fn)
@@ -388,7 +388,7 @@ class ResultList():
         pos = 0
         while True:
             item = self.store.get_item(pos)
-            pos = pos + 1
+            pos += 1
             if item is None:
                 break
             else:
@@ -406,3 +406,30 @@ class ResultList():
         if letter == 'b': return self.get_selected_item().path_b
         return ''
 
+    def set_oper_flags_for_selected_items(self, oper : OperType):
+        def get_flag(inx):
+            # data_row = self.store[inx]
+            data_row = self.selection[inx]
+            if oper == OperType.COPY_AB: return data_row.a_to_b
+            elif oper == OperType.COPY_BA: return data_row.b_to_a
+            elif oper == OperType.DEL_A: return data_row.del_a
+            elif oper == OperType.DEL_B: return data_row.del_b
+            else: return 0
+
+        def set_flag(inx, v):
+            # data_row = self.store[inx]
+            data_row = self.selection[inx]
+            if oper == OperType.COPY_AB: data_row.a_to_b = v
+            elif oper == OperType.COPY_BA: data_row.b_to_a = v
+            elif oper == OperType.DEL_A: data_row.del_a = v
+            elif oper == OperType.DEL_B: data_row.del_b = v
+
+        sel : Gtk.Bitset = self.selection.get_selection()
+        is_valid,iter,data_index = Gtk.BitsetIter.init_first(sel)
+        new_flag_value = None
+
+        while is_valid:
+            if new_flag_value is None: new_flag_value = not get_flag(data_index)
+            set_flag(data_index, new_flag_value)
+            print(f"{data_index} {new_flag_value}" )
+            is_valid,data_index =  iter.next()

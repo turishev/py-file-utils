@@ -29,6 +29,7 @@ class ToolsPanel():
         self.box.append(make_button('Del A', 'selected-files-del-a'))
         self.box.append(make_button('B->A', 'selected-files-b-to-a'))
         self.box.append(make_button('Del B', 'selected-files-del-b'))
+
     def get_box(self):
         return self.box
 
@@ -82,6 +83,32 @@ class OptionsPanel():
                            check_time=self.time_cb.get_active(),
                            check_content=self.content_cb.get_active())
 
+class DirBox():
+    def __init__(self, label, action):
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.box.set_spacing(8)
+        self.box.set_margin_top(8)
+        # self.dir_a_box.set_margin_bottom(8)
+        self.box.set_margin_start(8)
+        self.box.set_margin_end(8)
+        self.dir_bt = make_button(label, action)
+        self.box.append(self.dir_bt);
+        self.entry = Gtk.Entry()
+        self.entry.set_hexpand(True)
+        self.box.append(self.entry);
+
+    def get_box(self):
+        return self.box
+
+    def set_dir(self, dir):
+        self.entry.set_text(dir)
+
+    def get_dir(self):
+        return self.entry.get_text()
+
+    def set_sensitive(self, v):
+        self.dir_bt.set_sensitive(v)
+
 
 class MainWindow(Gtk.ApplicationWindow):
     app_title = "dircmp"
@@ -96,36 +123,13 @@ class MainWindow(Gtk.ApplicationWindow):
         self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_child(self.main_box)
 
-        self.dir_a_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.dir_a_box.set_spacing(8)
-        self.dir_a_box.set_margin_top(8)
-        # self.dir_a_box.set_margin_bottom(8)
-        self.dir_a_box.set_margin_start(8)
-        self.dir_a_box.set_margin_end(8)
+        self.dir_a_box = DirBox("A", "select-dir-a")
+        self.dir_b_box = DirBox("B", "select-dir-b")
+        self.main_box.append(self.dir_a_box.get_box())
+        self.main_box.append(self.dir_b_box.get_box())
+        self.dir_a_box.set_dir('/home/prog/myproj/py-file-utils/assets/d1')
+        self.dir_b_box.set_dir('/home/prog/myproj/py-file-utils/assets/d2')
 
-        self.dir_b_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.dir_b_box.set_spacing(8)
-        self.dir_b_box.set_margin_top(8)
-        # self.dir_b_box.set_margin_bottom(8)
-        self.dir_b_box.set_margin_start(8)
-        self.dir_b_box.set_margin_end(8)
-        self.dir_b_box.set_spacing(8)
-
-        self.main_box.append(self.dir_a_box)
-        self.main_box.append(self.dir_b_box)
-        self.dir_a_bt = make_button("A", "select-dir-a")
-
-        self.dir_b_bt = make_button("B", "select-dir-b")
-        self.dir_a_box.append(self.dir_a_bt);
-        self.dir_b_box.append(self.dir_b_bt);
-        self.dir_a_entry = Gtk.Entry()
-        self.dir_a_entry.set_hexpand(True)
-        self.dir_a_box.append(self.dir_a_entry);
-        self.dir_b_entry = Gtk.Entry()
-        self.dir_b_entry.set_hexpand(True)
-        self.dir_b_box.append(self.dir_b_entry);
-
-        
         self.top_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.top_box.set_spacing(32)
         self.top_box.set_margin_bottom(8)
@@ -197,8 +201,8 @@ class MainWindow(Gtk.ApplicationWindow):
     def start_compare(self):
         self.compare_bt.set_sensitive(False)
         self.execute_bt.set_sensitive(False)
-        self.dir_a_bt.set_sensitive(False)
-        self.dir_b_bt.set_sensitive(False)
+        self.dir_a_box.set_sensitive(False)
+        self.dir_b_box.set_sensitive(False)
         self.break_bt.set_sensitive(True)
         self.result_list.clear()
         self.set_status('Comparing..')
@@ -206,8 +210,8 @@ class MainWindow(Gtk.ApplicationWindow):
     def execute_operations(self, oper_list):
         self.compare_bt.set_sensitive(False)
         self.execute_bt.set_sensitive(False)
-        self.dir_a_bt.set_sensitive(False)
-        self.dir_b_bt.set_sensitive(False)
+        self.dir_a_box.set_sensitive(False)
+        self.dir_b_box.set_sensitive(False)
         self.break_bt.set_sensitive(True)
         self.set_status('Executing..')
 
@@ -215,20 +219,21 @@ class MainWindow(Gtk.ApplicationWindow):
         self.compare_bt.set_sensitive(True)
         if self.result_list.get_list_len() > 0: self.execute_bt.set_sensitive(True)
         self.break_bt.set_sensitive(False)
-        self.dir_a_bt.set_sensitive(True)
-        self.dir_b_bt.set_sensitive(True)
+        self.dir_a_box.set_sensitive(True)
+        self.dir_b_box.set_sensitive(True)
         if is_abort: self.set_status('Aborted')
         else: self.set_status('Finished')
 
     def set_dir(self, letter, dir):
-        if letter == 'a': self.dir_a_entry.set_text(dir)
-        else: self.dir_b_entry.set_text(dir)
-        if self.dir_a_entry.get_text() != "" and self.dir_b_entry.set_text != "":
+        if letter == 'a': self.dir_a_box.set_dir(dir)
+        else: self.dir_b_box.set_dir(dir)
+
+        if self.dir_a_box.get_dir() != "" and self.dir_b_box.get_dir() != "":
             self.compare_bt.set_sensitive(True)
 
     def get_dir(self, letter):
-        if letter == 'a': return self.dir_a_entry.get_text()
-        else: return self.dir_b_entry.get_text()
+        dir_box = self.dir_a_box if letter == 'a' else self.dir_b_box
+        return dir_box.get_dir()
 
     def append_to_list(self, item  : CompareResultItem):
         self.result_list.append(item)

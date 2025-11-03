@@ -134,6 +134,14 @@ def _open_dir_handler(letter):
                          lambda dir: _main_window.set_dir(letter, dir))
 
 
+def _set_oper_flags_handler(oper :  OperType):
+    global _main_window
+    global _action_status
+    if _action_status == ActionStatus.RUN: return
+    _main_window.result_list.set_oper_flags_for_selected_items(oper)
+    
+
+
 _actions = [
     ('quit', _quit_handler),
     ('compare-dirs', _compare_handler),
@@ -145,6 +153,10 @@ _actions = [
     ('open-selected-file-b', lambda: _open_selected_file_handler('b')),
     ('open-selected-file-dir-a', lambda: _open_selected_file_dir_handler('a')),
     ('open-selected-file-dir-b', lambda: _open_selected_file_dir_handler('b')),
+    ('selected-files-a-to-b', lambda: _set_oper_flags_handler(OperType.COPY_AB)),
+    ('selected-files-del-a', lambda: _set_oper_flags_handler(OperType.DEL_A)),
+    ('selected-files-b-to-a', lambda: _set_oper_flags_handler(OperType.COPY_BA)),
+    ('selected-files-del-b', lambda: _set_oper_flags_handler(OperType.DEL_B)),
 ]
 
 
