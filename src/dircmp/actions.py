@@ -12,6 +12,7 @@ from subprocess import Popen, DEVNULL, STDOUT
 from dialogs import show_open_dir_dialog
 from shortcuts import shortcuts;
 # import utils
+from pathlib import Path, PurePath
 
 from app_types import *
 from files import compare_dirs
@@ -80,17 +81,31 @@ def _break_operations_handler():
     _action_status = ActionStatus.WAIT
 
 
-    # def open_handler(self):
-    #     if self.status == ActionStatus.RUN: return
-    #     result_list = self.win.result_list
-    #     file_name = result_list.get_selected_name()
-    #     path = self.file_ops.file_path(file_name)
+def _open_selected_file_handler(letter : str):
+    if _action_status == ActionStatus.RUN: return
+    path = _main_window.result_list.get_selected_file_path(letter)
+    print(f"_open_selected_file_handler {letter} {path}")
 
-    #     Popen(['xdg-open', path],
-    #           start_new_session=True,
-    #           close_fds=True,
-    #           stdout=DEVNULL,
-    #           stderr=STDOUT)
+    if path != '':
+        Popen(['xdg-open', path],
+              start_new_session=True,
+              close_fds=True,
+              stdout=DEVNULL,
+              stderr=STDOUT)
+
+
+def _open_selected_file_dir_handler(letter : str):
+    if _action_status == ActionStatus.RUN: return
+    path = _main_window.result_list.get_selected_file_path(letter)
+    print(f"_open_selected_file_dir_handler {letter} {path}")
+
+    if path != '':
+        dir = str(PurePath(path).parent)
+        Popen(['xdg-open', dir],
+              start_new_session=True,
+              close_fds=True,
+              stdout=DEVNULL,
+              stderr=STDOUT)
 
 
     # def delete_handler(self):
@@ -126,6 +141,10 @@ _actions = [
     ('break-operations', _break_operations_handler),
     ('select-dir-a', lambda: _open_dir_handler('a')),
     ('select-dir-b', lambda: _open_dir_handler('b')),
+    ('open-selected-file-a', lambda: _open_selected_file_handler('a')),
+    ('open-selected-file-b', lambda: _open_selected_file_handler('b')),
+    ('open-selected-file-dir-a', lambda: _open_selected_file_dir_handler('a')),
+    ('open-selected-file-dir-b', lambda: _open_selected_file_dir_handler('b')),
 ]
 
 

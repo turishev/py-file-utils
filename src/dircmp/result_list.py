@@ -90,9 +90,9 @@ class ResultList():
         self.store = Gio.ListStore(item_type=DataObject)
         self.list_view = Gtk.ColumnView()
 
-        name_col = _create_list_column("Name", "name", self.setup_name, self.bind_name, "str")
-        name_col.set_expand(True)
-        self.list_view.append_column(name_col)
+        self.name_column = _create_list_column("Name", "name", self.setup_name, self.bind_name, "str")
+        self.name_column.set_expand(True)
+        self.list_view.append_column(self.name_column)
         self.list_view.append_column(_create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "str"))
         self.list_view.append_column(_create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "num"))
         self.list_view.append_column(_create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "num"))
@@ -329,33 +329,33 @@ class ResultList():
                          )
 
         self.store.append(obj)
-        # model = self.selection
-        # model.select_item(0, True)
-        # self.list_view.scroll_to(0,
-        #                          self.name_column,
-        #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+        model = self.selection
+        model.select_item(0, True)
+        self.list_view.scroll_to(0,
+                                 self.name_column,
+                                 flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
 
     def clear(self):
         self.store.remove_all()
 
     def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
                                    x : float, y : float, cell : Gtk.ColumnViewCell):
-        # print("on_mouse_right_button_down")
+        print("on_mouse_right_button_down")
         data = cell.get_item()
-        print(data)
-        # self.select_item(data)
+        print(f"on_mouse_right_button_down: {data}")
+        self.select_item(data)
 
     def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int,
                                  x : float, y : float, cell : Gtk.ColumnViewCell):
         # print("on_mouse_right_button_up")
         data = cell.get_item()
-        # self.show_item_menu(cell.get_child(), x, y, data)
+        self.show_item_menu(cell.get_child(), x, y, data)
 
-    # def select_item(self, item):
-    #     model = self.selection
-    #     for i in range(model.get_n_items()):
-    #         if model.get_item(i) == item:
-    #             model.select_item(i, True)
+    def select_item(self, item):
+        model = self.selection
+        for i in range(model.get_n_items()):
+            if model.get_item(i) == item:
+                model.select_item(i, True)
 
     # def delete_item(self, item):
     #     print("delete_item: %s" % item.name)
@@ -365,30 +365,33 @@ class ResultList():
     #             model.remove(i)
     #             break
 
-    # def create_item_menu(self, widget, item):
-    #     gmenu = Gio.Menu()
-    #     if item.type == 'D':
-    #         gmenu.append("dirsize", "app.dirsize-selected-file")
-    #     gmenu.append("open", "app.open-selected-file")
-    #     gmenu.append("delete", "app.delete-selected-file")
-    #     menu = Gtk.PopoverMenu.new_from_model(gmenu)
-    #     menu.set_parent(widget)
-    #     return menu
+    def create_item_menu(self, widget, item):
+        gmenu = Gio.Menu()
+        gmenu.append("set flags", "app.set-operation-flags")
+        gmenu.append("exclude from list", "app.exclude-files-from-list")
+        gmenu.append("open A", "app.open-selected-file-a")
+        gmenu.append("open B", "app.open-selected-file-b")
+        gmenu.append("open dir A", "app.open-selected-file-dir-a")
+        gmenu.append("open dir B", "app.open-selected-file-dir-b")
 
-    # def show_item_menu(self, widget, x, y, item):
-    #     print("show_item_menu")
-    #     menu = self.create_item_menu(widget, item)
-    #     menu.set_offset(x, y)
-    #     menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
-    #     menu.popup()
+        menu = Gtk.PopoverMenu.new_from_model(gmenu)
+        menu.set_parent(widget)
+        return menu
 
-    # def get_selected_item(self):
-    #     model = self.selection
-    #     sel_inx = model.get_selected()
-    #     return model.get_item(sel_inx)
+    def show_item_menu(self, widget, x, y, item):
+        print("show_item_menu")
+        menu = self.create_item_menu(widget, item)
+        menu.set_offset(x, y)
+        menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
+        menu.popup()
 
-    # def get_selected_name(self):
-    #     return self.get_selected_item().name
+    def get_selected_item(self):
+        model = self.selection
+        sel_inx = model.get_selected()
+        return model.get_item(sel_inx)
+
+    def get_selected_name(self):
+        return self.get_selected_item().name
 
     # def delete_selected_item(self):
     #     print("delete_act_handler")
@@ -413,3 +416,9 @@ class ResultList():
 
     def get_list_len(self):
         return len(self.store)
+
+    def get_selected_file_path(self, letter):
+        if letter == 'a': return self.get_selected_item().path_a
+        if letter == 'b': return self.get_selected_item().path_b
+        return ''
+
