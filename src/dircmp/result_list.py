@@ -397,22 +397,28 @@ class ResultList():
             elif oper == OperType.COPY_BA: return data_row.b_to_a
             elif oper == OperType.DEL_A: return data_row.del_a
             elif oper == OperType.DEL_B: return data_row.del_b
-            else: return 0
+            else: return False
 
         def set_flag(inx, v):
             data_row = self.selection[inx]
-            print(data_row.name)
-            if oper == OperType.COPY_AB and data_row.diff != 'B': data_row.a_to_b = v
-            elif oper == OperType.COPY_BA and data_row.diff != 'A': data_row.b_to_a = v
-            elif oper == OperType.DEL_A and data_row.diff != 'B': data_row.del_a = v
-            elif oper == OperType.DEL_B and data_row.diff != 'A': data_row.del_b = v
+
+            if oper == OperType.COPY_AB:
+                data_row.b_to_a = False
+                data_row.del_b = False
+                if  data_row.diff != 'B': data_row.a_to_b = v
+            elif oper == OperType.COPY_BA:
+                data_row.a_to_b = False
+                data_row.del_a = False
+                if  data_row.diff != 'A': data_row.b_to_a = v
+            elif oper == OperType.DEL_A:
+                if  data_row.diff != 'B:': data_row.del_a = v
+            elif oper == OperType.DEL_B:
+                if data_row.diff != 'A': data_row.del_b = v
 
         sel : Gtk.Bitset = self.selection.get_selection()
         is_valid,iter,data_index = Gtk.BitsetIter.init_first(sel)
-        new_flag_value = None
+        new_flag_value = not get_flag(data_index) if is_valid else False
 
         while is_valid:
-            if new_flag_value is None: new_flag_value = not get_flag(data_index)
             set_flag(data_index, new_flag_value)
-            print(f"{data_index} {new_flag_value}" )
             is_valid,data_index =  iter.next()
