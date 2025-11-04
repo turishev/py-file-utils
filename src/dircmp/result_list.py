@@ -353,13 +353,12 @@ class ResultList():
         menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
         menu.popup()
 
-    def get_selected_item(self):
-        model = self.selection
-        sel_inx = model.get_selected()
-        return model.get_item(sel_inx)
+    def get_single_selection_item(self):
+        sel : Gtk.Bitset = self.selection.get_selection()
+        if sel.get_size() != 1: return None
+        inx = sel.get_minimum()
+        return self.selection.get_item(inx)
 
-    def get_selected_name(self):
-        return self.get_selected_item().name
 
     # def delete_selected_item(self):
     #     print("delete_act_handler")
@@ -386,13 +385,13 @@ class ResultList():
         return len(self.store)
 
     def get_selected_file_path(self, letter):
-        if letter == 'a': return self.get_selected_item().path_a
-        if letter == 'b': return self.get_selected_item().path_b
+        if letter == 'a': return self.get_single_selection_item().path_a
+        if letter == 'b': return self.get_single_selection_item().path_b
         return ''
 
     def set_oper_flags_for_selected_items(self, oper : OperType):
         def get_flag(inx):
-            data_row = self.selection[inx]
+            data_row = self.selection.get_item(inx)
             if oper == OperType.COPY_AB: return data_row.a_to_b
             elif oper == OperType.COPY_BA: return data_row.b_to_a
             elif oper == OperType.DEL_A: return data_row.del_a
@@ -400,7 +399,7 @@ class ResultList():
             else: return False
 
         def set_flag(inx, v):
-            data_row = self.selection[inx]
+            data_row = self.selection.get_item(inx)
 
             if oper == OperType.COPY_AB:
                 data_row.b_to_a = False
