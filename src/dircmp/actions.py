@@ -9,7 +9,7 @@ gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
 # from dialogs import show_confirm_dialog, show_open_dir_dialog
-from dialogs import show_open_dir_dialog
+from dialogs import show_open_dir_dialog, ExcludeFilesDialog
 from shortcuts import shortcuts;
 # import utils
 from pathlib import Path, PurePath
@@ -140,6 +140,27 @@ def _set_oper_flags_handler(oper :  OperType):
     if _action_status == ActionStatus.RUN: return
     _main_window.result_list.set_oper_flags_for_selected_items(oper)
     
+def _set_operation_flags():
+    pass
+
+def _exclude_files_from_list():
+    global _main_window
+    global _action_status
+    if _action_status == ActionStatus.RUN: return
+
+    name = _main_window.result_list.get_selected_name()
+    name_parts = PurePath(name).parts
+    path_list = []
+    for s in PurePath(name).parts:
+        if path_list == []: path_list.append(s)
+        else: path_list.append(str(PurePath(path_list[-1], s)))
+    path_list.reverse()
+
+    def on_done(path):
+        print(f"on_done path:{path}")
+    dialog = ExcludeFilesDialog(_main_window, path_list, on_done)
+    dialog.present()
+
 
 
 _actions = [
@@ -157,6 +178,8 @@ _actions = [
     ('selected-files-del-a', lambda: _set_oper_flags_handler(OperType.DEL_A)),
     ('selected-files-b-to-a', lambda: _set_oper_flags_handler(OperType.COPY_BA)),
     ('selected-files-del-b', lambda: _set_oper_flags_handler(OperType.DEL_B)),
+    ('set-operation-flags', _set_operation_flags),
+    ('exclude-files-from-list', _exclude_files_from_list),
 ]
 
 

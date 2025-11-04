@@ -6,7 +6,8 @@ from collections.abc import Callable
 import pwd
 import grp
 from pathlib import Path, PurePath
-from hashlib import file_digest
+# from hashlib import file_digest
+import hashlib
 
 
 from app_types import *
@@ -34,12 +35,18 @@ def _get_file_info(path : Path):
     )
 
 
+def calculate_file_hash(file_path: Path, algorithm="md5"):
+    if file_path.exists():
+        hasher = hashlib.new(algorithm)
+        with file_path.open("rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hasher.update(chunk)
+        return hasher.hexdigest()
+    else: return ''
+
 def _compare_content(path_a : str, path_b : str):
-    with open(path_a, 'rb') as f:
-        d1 = file_digest(f, 'md5').hexdigest()
-    with open(path_b, 'rb') as f:
-        d2 = file_digest(f, 'md5').hexdigest()
-    print(f"{d1} {d2}")
+    d1 = calculate_file_hash(Path(path_a))
+    d2 = calculate_file_hash(Path(path_b))
     return d1 == d2
 
 

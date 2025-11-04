@@ -389,6 +389,11 @@ class ResultList():
         if letter == 'b': return self.get_single_selection_item().path_b
         return ''
 
+
+    def get_selected_name(self):
+        return self.get_single_selection_item().name
+
+
     def set_oper_flags_for_selected_items(self, oper : OperType):
         def get_flag(inx):
             data_row = self.selection.get_item(inx)
