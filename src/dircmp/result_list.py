@@ -16,10 +16,10 @@ class DataObject(GObject.GObject):
 
     name = GObject.Property(type=GObject.TYPE_STRING, default="")
     diff = GObject.Property(type=GObject.TYPE_STRING, default="")
-    a_to_b = GObject.Property(type=GObject.TYPE_UINT, default=0)
-    del_a = GObject.Property(type=GObject.TYPE_UINT, default=0)
-    b_to_a = GObject.Property(type=GObject.TYPE_UINT, default=0) # use INT instead BOOLEAN for sake of sort support
-    del_b = GObject.Property(type=GObject.TYPE_UINT, default=0) # use INT instead BOOLEAN for sake of sort support
+    a_to_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    del_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
+    b_to_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False) # use INT instead BOOLEAN for sake of sort support
+    del_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False) # use INT instead BOOLEAN for sake of sort support
     type_a = GObject.Property(type=GObject.TYPE_STRING, default="")
     type_b = GObject.Property(type=GObject.TYPE_STRING, default="")
     size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1)
@@ -78,7 +78,7 @@ def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
 
     if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
-    elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp)
+    elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp) # works for bool also
     else: sorter = None
 
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
@@ -231,64 +231,48 @@ class ResultList():
         label.set_text(_format_time(obj.time_b))
 
     def setup_a_to_b(self, factory, item):
-        def on_toogle(_):
-            item.get_item().a_to_b = 0 if item.get_item().a_to_b == 1 else 1
-
         cb = Gtk.CheckButton()
         item.set_child(cb)
-        cb.connect('toggled', on_toogle)
-        #self.connect_menu(cb, item)
 
     def bind_a_to_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'B': cb.set_sensitive(False)
         else:  cb.set_active(obj.a_to_b > 0)
+        obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_b_to_a(self, factory, item):
-        def on_toogle(_):
-            item.get_item().b_to_a = 0 if item.get_item().b_to_a == 1 else 1
-
         cb = Gtk.CheckButton()
-        cb.connect('toggled', on_toogle)
         item.set_child(cb)
-        #self.connect_menu(cb, item)
 
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'A': cb.set_sensitive(False)
         else: cb.set_active(obj.b_to_a > 0)
+        obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_a(self, factory, item):
-        def on_toogle(_):
-            item.get_item().del_a = 0 if item.get_item().del_a == 1 else 1
-
         cb = Gtk.CheckButton()
-        cb.connect('toggled', on_toogle)
         item.set_child(cb)
-        #self.connect_menu(cb, item)
 
     def bind_del_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'B': cb.set_sensitive(False)
         else: cb.set_active(obj.del_a > 0)
+        obj.bind_property("del_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_b(self, factory, item):
-        def on_toogle(_):
-            item.get_item().del_b = 0 if item.get_item().del_b == 1 else 1
-
         cb = Gtk.CheckButton()
-        cb.connect('toggled', on_toogle)
         item.set_child(cb)
-        #self.connect_menu(cb, item)
 
     def bind_del_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'A': cb.set_sensitive(False)
         else: cb.set_active(obj.del_b > 0)
+        obj.bind_property("del_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
@@ -408,7 +392,6 @@ class ResultList():
 
     def set_oper_flags_for_selected_items(self, oper : OperType):
         def get_flag(inx):
-            # data_row = self.store[inx]
             data_row = self.selection[inx]
             if oper == OperType.COPY_AB: return data_row.a_to_b
             elif oper == OperType.COPY_BA: return data_row.b_to_a
@@ -417,12 +400,12 @@ class ResultList():
             else: return 0
 
         def set_flag(inx, v):
-            # data_row = self.store[inx]
             data_row = self.selection[inx]
-            if oper == OperType.COPY_AB: data_row.a_to_b = v
-            elif oper == OperType.COPY_BA: data_row.b_to_a = v
-            elif oper == OperType.DEL_A: data_row.del_a = v
-            elif oper == OperType.DEL_B: data_row.del_b = v
+            print(data_row.name)
+            if oper == OperType.COPY_AB and data_row.diff != 'B': data_row.a_to_b = v
+            elif oper == OperType.COPY_BA and data_row.diff != 'A': data_row.b_to_a = v
+            elif oper == OperType.DEL_A and data_row.diff != 'B': data_row.del_a = v
+            elif oper == OperType.DEL_B and data_row.diff != 'A': data_row.del_b = v
 
         sel : Gtk.Bitset = self.selection.get_selection()
         is_valid,iter,data_index = Gtk.BitsetIter.init_first(sel)
