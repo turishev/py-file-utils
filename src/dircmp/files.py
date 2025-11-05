@@ -60,7 +60,7 @@ def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None, opts : Syn
     if info_a.type != info_b.type: res = res + 'f'
     if opts.check_size and info_a.size != info_b.size: res = res + 's'
     if opts.check_time and info_a.time != info_b.time: res = res + 't'
-    if opts.check_content and not _compare_content(info_a.path, info_b.path): res = res + 'c'
+    if opts.check_content and (info_a.size != info_b.size or not _compare_content(info_a.path, info_b.path)): res = res + 'c'
     # if info_a.owner != info_b.owner: res = res + 'o'
     return res
 

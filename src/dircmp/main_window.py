@@ -60,7 +60,6 @@ class OptionsPanel():
         box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box_3.set_margin_start(12)
         self.time_cb = Gtk.CheckButton()
-        self.time_cb.set_active(True)
         box_3.append(self.time_cb)
         box_3.append(Gtk.Label.new_with_mnemonic('check time'))
         self.box.append(box_3)
