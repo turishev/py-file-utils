@@ -149,3 +149,13 @@ def owner(uid, gid):
 
 def perm(mode):
     return hex(mode & 0o7777)
+
+
+def make_path_list(path : str) -> list[str]:
+    '''split a path into list of partial paths'''
+    path_list = []
+    for s in PurePath(path).parts:
+        if path_list == []: path_list.append(s)
+        else: path_list.append(str(PurePath(path_list[-1], s)))
+    path_list.reverse()
+    return path_list

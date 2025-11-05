@@ -326,11 +326,6 @@ class ResultList():
             if model.get_item(i) == item:
                 model.select_item(i, True)
 
-    def _delete_items(self, predicate):
-        model = self.store
-        for i in range(model.get_n_items()):
-            if predicate(model.get_item(i)): model.remove(i)
-
     def delete_items(self, method : str, text : str):
         if method == 'starts-with':
             self._delete_by_predicate_backward(lambda item: item.name.startswith(text))
@@ -344,6 +339,7 @@ class ResultList():
 
 
     def _delete_by_predicate_backward(self, predicate):
+        # removing backward is more safely
         store =  self.store
         # Iterate backward using indices
         for i in range(store.get_n_items() - 1, -1, -1):
@@ -417,28 +413,28 @@ class ResultList():
 
     def set_oper_flags_for_selected_items(self, oper : OperType):
         def get_flag(inx):
-            data_row = self.selection.get_item(inx)
-            if oper == OperType.COPY_AB: return data_row.a_to_b
-            elif oper == OperType.COPY_BA: return data_row.b_to_a
-            elif oper == OperType.DEL_A: return data_row.del_a
-            elif oper == OperType.DEL_B: return data_row.del_b
+            item = self.selection.get_item(inx)
+            if oper == OperType.COPY_AB: return item.a_to_b
+            elif oper == OperType.COPY_BA: return item.b_to_a
+            elif oper == OperType.DEL_A: return item.del_a
+            elif oper == OperType.DEL_B: return item.del_b
             else: return False
 
         def set_flag(inx, v):
-            data_row = self.selection.get_item(inx)
+            item = self.selection.get_item(inx)
 
             if oper == OperType.COPY_AB:
-                data_row.b_to_a = False
-                data_row.del_b = False
-                if  data_row.diff != 'B': data_row.a_to_b = v
+                item.b_to_a = False
+                item.del_b = False
+                if  item.diff != 'B': item.a_to_b = v
             elif oper == OperType.COPY_BA:
-                data_row.a_to_b = False
-                data_row.del_a = False
-                if  data_row.diff != 'A': data_row.b_to_a = v
+                item.a_to_b = False
+                item.del_a = False
+                if  item.diff != 'A': item.b_to_a = v
             elif oper == OperType.DEL_A:
-                if  data_row.diff != 'B:': data_row.del_a = v
+                if  item.diff != 'B:': item.del_a = v
             elif oper == OperType.DEL_B:
-                if data_row.diff != 'A': data_row.del_b = v
+                if item.diff != 'A': item.del_b = v
 
         sel : Gtk.Bitset = self.selection.get_selection()
         is_valid,iter,data_index = Gtk.BitsetIter.init_first(sel)
@@ -447,3 +443,14 @@ class ResultList():
         while is_valid:
             set_flag(data_index, new_flag_value)
             is_valid,data_index =  iter.next()
+
+
+    def set_oper_flags_butch(self, path, a_to_b, del_a, b_to_a, del_b):
+        model = self.store
+        for i in range(model.get_n_items()):
+            item = model.get_item(i)
+            if item.name.startswith(path):
+                item.a_to_b = a_to_b and item.diff != 'B'
+                item.b_to_a = b_to_a and item.diff != 'A'
+                item.del_a = del_a and not b_to_a and item.diff != 'B'
+                item.del_b = del_b and not a_to_b and item.diff != 'A'

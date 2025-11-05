@@ -114,6 +114,63 @@ class ExcludeNamesDialog(Gtk.Dialog):
 
 
 
+class ExcludeOperFlagsDialog(Gtk.Dialog):
+    def __init__(self, parent, path_list, on_done):
+        super().__init__(title="Set flags for paths", transient_for=parent, modal=True)
+        self.path_list = path_list
+        self.on_done = on_done
+        self.set_default_size(60, 150)
+        self.connect("response", self.on_response)
+
+        content_area = self.get_content_area()
+        content_area.set_vexpand(True)
+        content_area.set_margin_top(8)
+        content_area.set_margin_bottom(16)
+        content_area.set_margin_start(8)
+        content_area.set_margin_end(8)
+        content_area.set_spacing(16)
+
+        self.selector = Gtk.DropDown.new_from_strings(path_list)
+        content_area.append(self.selector)
+
+        box_1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_1.set_spacing(16)
+        content_area.append(box_1)
+
+        self.a_to_b_cb = self.make_cb('A->B', box_1)
+        self.del_a_cb = self.make_cb('del A', box_1)
+        self.b_to_a_cb = self.make_cb('B->A', box_1)
+        self.del_b_cb = self.make_cb('del B', box_1)
+        
+        self.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        self.add_button("OK", Gtk.ResponseType.OK)
+        self.set_default_response(Gtk.ResponseType.OK)
+
+    def on_response(self, widget, response_id):
+        if response_id == Gtk.ResponseType.OK:
+            print("The OK button was clicked")
+            inx = self.selector.get_selected()
+            self.on_done(path=self.path_list[inx],
+                         a_to_b=self.a_to_b_cb.get_active(),
+                         del_a=self.del_a_cb.get_active(),
+                         b_to_a=self.b_to_a_cb.get_active(),
+                         del_b=self.del_b_cb.get_active())
+
+        elif response_id == Gtk.ResponseType.CANCEL:
+            print("The Cancel button was clicked")
+            self.on_done()
+        self.destroy()
+
+    def make_cb(self, label, box):
+        box_1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        cb = Gtk.CheckButton()
+        box_1.append(cb)
+        box_1.append(Gtk.Label.new_with_mnemonic(label))
+        box.append(box_1)
+        return cb
+
+
+
 # def show_confirm_dialog(parent, message, on_ok):
 #     def do_act(source_obj, async_res):
 #         if source_obj.choose_finish(async_res) == 1:

@@ -57,12 +57,12 @@ class OptionsPanel():
         box_1.append(Gtk.Label.new_with_mnemonic('check size'))
         self.box.append(box_1)
 
-        box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box_3.set_margin_start(12)
+        box_2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_2.set_margin_start(12)
         self.time_cb = Gtk.CheckButton()
-        box_3.append(self.time_cb)
-        box_3.append(Gtk.Label.new_with_mnemonic('check time'))
-        self.box.append(box_3)
+        box_2.append(self.time_cb)
+        box_2.append(Gtk.Label.new_with_mnemonic('check time'))
+        self.box.append(box_2)
 
         box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         box_3.set_margin_start(12)
