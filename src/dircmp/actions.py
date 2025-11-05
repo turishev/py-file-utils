@@ -139,7 +139,7 @@ def _set_oper_flags_handler(oper :  OperType):
     global _action_status
     if _action_status == ActionStatus.RUN: return
     _main_window.result_list.set_oper_flags_for_selected_items(oper)
-    
+
 def _set_operation_flags():
     pass
 
@@ -166,8 +166,11 @@ def _exclude_names_from_list():
     global _action_status
     if _action_status == ActionStatus.RUN: return
 
-    def on_done(path):
-        print(f"on_done path:{path}")
+    def on_done(result):
+        print(f"_exclude_names_from_list result:{result}")
+        if result is not None:
+            _main_window.result_list.delete_items(result[0], result[1])
+
     dialog = ExcludeNamesDialog(_main_window, on_done)
     dialog.present()
 

@@ -3,6 +3,7 @@ from typing import TypeAlias
 
 import gi
 from time import localtime, strftime
+import re
 
 
 gi.require_version('Gtk', '4.0')
@@ -325,13 +326,32 @@ class ResultList():
             if model.get_item(i) == item:
                 model.select_item(i, True)
 
-    # def delete_item(self, item):
-    #     print("delete_item: %s" % item.name)
-    #     model = self.store
-    #     for i in range(model.get_n_items()):
-    #         if model.get_item(i) == item:
-    #             model.remove(i)
-    #             break
+    def _delete_items(self, predicate):
+        model = self.store
+        for i in range(model.get_n_items()):
+            if predicate(model.get_item(i)): model.remove(i)
+
+    def delete_items(self, method : str, text : str):
+        if method == 'starts-with':
+            self._delete_by_predicate_backward(lambda item: item.name.startswith(text))
+        elif method == 'ends-with':
+            self._delete_by_predicate_backward(lambda item: item.name.endswith(text))
+        elif method == 'contains':
+            self._delete_by_predicate_backward(lambda item: text in item.name)
+        elif method == 'regexp':
+            pattern = re.compile(text)
+            self._delete_by_predicate_backward(lambda item: pattern.match(item.name))
+
+
+    def _delete_by_predicate_backward(self, predicate):
+        store =  self.store
+        # Iterate backward using indices
+        for i in range(store.get_n_items() - 1, -1, -1):
+            item = store.get_item(i)
+            if predicate(item):
+                # Remove the item at the current index
+                store.remove(i)
+
 
     def create_item_menu(self, widget, item):
         gmenu = Gio.Menu()

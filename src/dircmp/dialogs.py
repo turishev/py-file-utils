@@ -69,14 +69,14 @@ class ExcludeNamesDialog(Gtk.Dialog):
         rbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         content_area.append(rbox)
 
-        radio1 = Gtk.CheckButton(label="started with..")
-        radio1.connect("toggled", self.on_radio_toggled, "started-with")
+        radio1 = Gtk.CheckButton(label="starts with..")
+        radio1.connect("toggled", self.on_radio_toggled, "starts-with")
         rbox.append(radio1)
         radio1.set_active(True)
 
-        radio2 = Gtk.CheckButton(label="ended with..")
+        radio2 = Gtk.CheckButton(label="ends with..")
         radio2.set_group(radio1)
-        radio2.connect("toggled", self.on_radio_toggled, "ended-with")
+        radio2.connect("toggled", self.on_radio_toggled, "ends-with")
         rbox.append(radio2)
 
         radio3 = Gtk.CheckButton(label="contains..")
