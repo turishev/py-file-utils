@@ -54,7 +54,8 @@ class DataObject(GObject.GObject):
 
 
 def _format_time(tm):
-    return strftime("%Y-%m-%d %H:%M:%S", localtime(tm))
+    if tm <= 0: return ''
+    else: return strftime("%Y-%m-%d %H:%M:%S", localtime(tm))
 
 def _get_op_type(a_to_b : bool, b_to_a : bool, del_a : bool, del_b : bool) -> OperType:
     if a_to_b:
