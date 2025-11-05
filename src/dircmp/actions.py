@@ -9,7 +9,7 @@ gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
 # from dialogs import show_confirm_dialog, show_open_dir_dialog
-from dialogs import show_open_dir_dialog, ExcludeFilesDialog
+from dialogs import show_open_dir_dialog, ExcludeFilesDialog, ExcludeNamesDialog
 from shortcuts import shortcuts;
 # import utils
 from pathlib import Path, PurePath
@@ -149,7 +149,7 @@ def _exclude_files_from_list():
     if _action_status == ActionStatus.RUN: return
 
     name = _main_window.result_list.get_selected_name()
-    name_parts = PurePath(name).parts
+
     path_list = []
     for s in PurePath(name).parts:
         if path_list == []: path_list.append(s)
@@ -159,6 +159,16 @@ def _exclude_files_from_list():
     def on_done(path):
         print(f"on_done path:{path}")
     dialog = ExcludeFilesDialog(_main_window, path_list, on_done)
+    dialog.present()
+
+def _exclude_names_from_list():
+    global _main_window
+    global _action_status
+    if _action_status == ActionStatus.RUN: return
+
+    def on_done(path):
+        print(f"on_done path:{path}")
+    dialog = ExcludeNamesDialog(_main_window, on_done)
     dialog.present()
 
 
@@ -180,6 +190,7 @@ _actions = [
     ('selected-files-del-b', lambda: _set_oper_flags_handler(OperType.DEL_B)),
     ('set-operation-flags', _set_operation_flags),
     ('exclude-files-from-list', _exclude_files_from_list),
+    ('exclude-names-from-list', _exclude_names_from_list),
 ]
 
 

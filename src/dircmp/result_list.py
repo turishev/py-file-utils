@@ -336,7 +336,8 @@ class ResultList():
     def create_item_menu(self, widget, item):
         gmenu = Gio.Menu()
         gmenu.append("set flags", "app.set-operation-flags")
-        gmenu.append("exclude from list", "app.exclude-files-from-list")
+        gmenu.append("exclude paths from list", "app.exclude-files-from-list")
+        gmenu.append("exclude names from list", "app.exclude-names-from-list")
         gmenu.append("open A", "app.open-selected-file-a")
         gmenu.append("open B", "app.open-selected-file-b")
         gmenu.append("open dir A", "app.open-selected-file-dir-a")
