@@ -1,6 +1,4 @@
 from __future__ import annotations # for list annotations
-from typing import TypeAlias
-
 import enum
 
 import gi
@@ -8,14 +6,12 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
 from subprocess import Popen, DEVNULL, STDOUT
-# from dialogs import show_confirm_dialog, show_open_dir_dialog
-from dialogs import show_open_dir_dialog, ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog
-from shortcuts import shortcuts;
-# import utils
-from pathlib import Path, PurePath
+from pathlib import PurePath
 
 from app_types import *
 from files import compare_dirs, make_path_list
+from dialogs import show_open_dir_dialog, ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
+from shortcuts import shortcuts;
 
 
 class ActionStatus(enum.Enum):
@@ -69,6 +65,15 @@ def _exec_handler():
     oper_list = _main_window.get_oper_list()
     print(f"oper_list:{oper_list}")
     _main_window.execute_operations(oper_list)
+    
+    def on_done():
+        pass
+
+    dialog = ExecLogDialog(_main_window, on_done)
+    dialog.present()
+    dialog.add_line('Start synchronization')
+
+    dialog.add_line('Stop synchronization')
     _main_window.stop_operations()
     _action_status = ActionStatus.WAIT
 

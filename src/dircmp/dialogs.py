@@ -3,6 +3,8 @@ gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gtk, GLib, Gio
 
+from datetime import datetime
+
 
 def show_open_dir_dialog(parent, init_dir, on_select):
     dialog = Gtk.FileDialog()
@@ -169,6 +171,50 @@ class ExcludeOperFlagsDialog(Gtk.Dialog):
         box.append(box_1)
         return cb
 
+
+class ExecLogDialog(Gtk.Dialog):
+    def __init__(self, parent, on_done):
+        super().__init__(title="Syncing log", transient_for=parent, modal=True)
+        self.on_done = on_done
+        self.set_default_size(900, 600)
+        self.connect("response", self.on_response)
+
+        content_area = self.get_content_area()
+        content_area.set_vexpand(True)
+        content_area.set_margin_top(8)
+        content_area.set_margin_bottom(16)
+        content_area.set_margin_start(8)
+        content_area.set_margin_end(8)
+        content_area.set_spacing(16)
+
+        sw = Gtk.ScrolledWindow()
+        content_area.append(sw)
+        sw.set_hexpand(True)
+        sw.set_vexpand(True)
+
+        self.text_view  = Gtk.TextView()
+        self.text_view.set_editable(False)
+        sw.set_child(self.text_view)
+
+
+        self.add_button("Cancel", Gtk.ResponseType.CANCEL)
+        self.add_button("OK", Gtk.ResponseType.OK)
+        self.set_default_response(Gtk.ResponseType.OK)
+
+    def add_line(self, text):
+        tm = datetime.now().strftime("%H:%M:%S")
+        self.text_view.get_buffer().insert_at_cursor(f"{tm} {text}\n")
+
+
+    def on_response(self, widget, response_id):
+        if response_id == Gtk.ResponseType.OK:
+            print("The OK button was clicked")
+            self.on_done()
+
+        elif response_id == Gtk.ResponseType.CANCEL:
+            print("The Cancel button was clicked")
+            self.on_done()
+        self.destroy()
 
 
 # def show_confirm_dialog(parent, message, on_ok):
