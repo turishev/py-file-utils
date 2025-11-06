@@ -214,14 +214,14 @@ class MainWindow(Gtk.ApplicationWindow):
         self.break_bt.set_sensitive(True)
         self.set_status('Executing..')
 
-    def stop_operations(self, is_abort=False):
+    def stop_operations(self, status : str):
         self.compare_bt.set_sensitive(True)
         if self.result_list.get_list_len() > 0: self.execute_bt.set_sensitive(True)
         self.break_bt.set_sensitive(False)
         self.dir_a_box.set_sensitive(True)
         self.dir_b_box.set_sensitive(True)
-        if is_abort: self.set_status('Aborted')
-        else: self.set_status('Finished')
+        self.set_status(status)
+
 
     def set_dir(self, letter, dir):
         if letter == 'a': self.dir_a_box.set_dir(dir)

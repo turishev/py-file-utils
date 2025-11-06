@@ -9,7 +9,7 @@ from subprocess import Popen, DEVNULL, STDOUT
 from pathlib import PurePath
 
 from app_types import *
-from files import compare_dirs, make_path_list
+import files
 from dialogs import show_open_dir_dialog, ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
 from shortcuts import shortcuts;
 
@@ -51,8 +51,8 @@ def _compare_handler():
         _main_window.append_to_list(item)
         _update_ui()
 
-    result = compare_dirs(dir_a, dir_b, opts, _add_new_item)
-    _main_window.stop_operations()
+    result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
+    _main_window.stop_operations('Comparing is done')
     _action_status = ActionStatus.WAIT
 
 def _exec_handler():
@@ -66,15 +66,21 @@ def _exec_handler():
     print(f"oper_list:{oper_list}")
     _main_window.execute_operations(oper_list)
     
-    def on_done():
-        pass
+    def on_break():
+        files.break_operations(True)
+        dialog.operations_end()
+        _action_status = ActionStatus.WAIT
 
-    dialog = ExecLogDialog(_main_window, on_done)
+
+    dialog = ExecLogDialog(_main_window, on_break)
     dialog.present()
     dialog.add_line('Start synchronization')
 
+    
+    files.break_operations(False)
     dialog.add_line('Stop synchronization')
-    _main_window.stop_operations()
+    dialog.operations_end()
+    _main_window.stop_operations('Operations are ended')
     _action_status = ActionStatus.WAIT
 
 
@@ -82,7 +88,7 @@ def _break_operations_handler():
     global _main_window
     global _action_status
     if _action_status != ActionStatus.RUN: return
-    _main_window.stop_operations(is_abort=True)
+    _main_window.stop_operations('Aborted')
     _action_status = ActionStatus.WAIT
 
 
@@ -151,7 +157,7 @@ def _set_operation_flags():
     global _action_status
     if _action_status == ActionStatus.RUN: return
     name = _main_window.result_list.get_selected_name()
-    path_list = make_path_list(name)[1:] # exclude full file path
+    path_list = files.make_path_list(name)[1:] # exclude full file path
 
     def on_done(path='', a_to_b=False, del_a=False, b_to_a=False, del_b=False):
         print(f"on_done path:{path} {a_to_b} {b_to_a} {del_a} {del_b}")
@@ -169,7 +175,7 @@ def _exclude_files_from_list():
     if _action_status == ActionStatus.RUN: return
 
     name = _main_window.result_list.get_selected_name()
-    path_list = make_path_list(name)
+    path_list = files.make_path_list(name)
 
     def on_done(path):
         print(f"on_done path:{path}")

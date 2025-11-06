@@ -173,11 +173,13 @@ class ExcludeOperFlagsDialog(Gtk.Dialog):
 
 
 class ExecLogDialog(Gtk.Dialog):
-    def __init__(self, parent, on_done):
+    def __init__(self, parent, on_break):
         super().__init__(title="Syncing log", transient_for=parent, modal=True)
-        self.on_done = on_done
+        self.set_deletable(False)
+        self.on_break = on_break
         self.set_default_size(900, 600)
         self.connect("response", self.on_response)
+        self.connect("close-request", self.on_close_request)
 
         content_area = self.get_content_area()
         content_area.set_vexpand(True)
@@ -196,25 +198,37 @@ class ExecLogDialog(Gtk.Dialog):
         self.text_view.set_editable(False)
         sw.set_child(self.text_view)
 
-
-        self.add_button("Cancel", Gtk.ResponseType.CANCEL)
-        self.add_button("OK", Gtk.ResponseType.OK)
-        self.set_default_response(Gtk.ResponseType.OK)
+        self.break_bt = self.add_button("Break", 1)
+        self.close_bt = self.add_button("Close", Gtk.ResponseType.CLOSE)
+        self.close_bt.set_sensitive(False)
 
     def add_line(self, text):
         tm = datetime.now().strftime("%H:%M:%S")
         self.text_view.get_buffer().insert_at_cursor(f"{tm} {text}\n")
 
+    def operations_end(self):
+        self.add_line("END")
+        self.close_bt.set_sensitive(True)
+        self.break_bt.set_sensitive(False)
+
+    def on_close_request(self, dialog):
+        # Returning True stops the signal propagation and prevents the close.
+        return True 
 
     def on_response(self, widget, response_id):
-        if response_id == Gtk.ResponseType.OK:
-            print("The OK button was clicked")
-            self.on_done()
-
+        print(f"on_response {response_id}")
+        if response_id == 1:
+            print("break")
+            self.on_break()
+            self.break_bt.set_sensitive(False)
+            self.close_bt.set_sensitive(True)
+        elif response_id == Gtk.ResponseType.CLOSE:
+            print('close dialog')
+            self.destroy()
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("The Cancel button was clicked")
-            self.on_done()
-        self.destroy()
+            print("cancel")
+
+
 
 
 # def show_confirm_dialog(parent, message, on_ok):

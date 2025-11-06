@@ -21,7 +21,10 @@ _file_types = {8 : 'file',
                6 : 'block'}
 
 
-_break_walk = False
+_break_operations = False
+
+def break_operations(val):
+    _break_operations = val
 
 def _get_file_info(path : Path):
     st = path.stat()
@@ -68,11 +71,11 @@ def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None, opts : Syn
 
 def _compare_dirs(dir_a : Path, dir_b : Path, opts : SyncOptions, reverse_dir=False, result={},
                   on_item : Callable[[CompareResultItem], None] | None =None):
-    global _break_walk
+    global _break_operations
     dir_a_len = len(str(dir_a))
 
     for pcur_dir, _, files in Path.walk(dir_a, follow_symlinks=False):
-        if _break_walk: return
+        if _break_operations: return
 
         sub_dir = str(pcur_dir)[dir_a_len:]
         cur_dir_b = Path(str(dir_b) + sub_dir)
@@ -96,11 +99,11 @@ def _compare_dirs(dir_a : Path, dir_b : Path, opts : SyncOptions, reverse_dir=Fa
 def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
                  on_item : Callable[[CompareResultItem], None] | None =None
                  ) -> list[CompareResultItem]:
-    global _break_walk
+    global _break_operations
 
     adir_a = Path(dir_a).resolve()
     adir_b = Path(dir_b).resolve()
-    _break_walk = False
+    _break_operations = False
     result={}
     if opts.sync_direction != SyncDirection.B_TO_A:
         _compare_dirs(adir_a, adir_b, opts, False, result, on_item)
@@ -110,8 +113,8 @@ def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
 
 
 def stop_calculation():
-    global _break_walk
-    _break_walk = True
+    global _break_operations
+    _break_operations = True
 
 # def delete(self, file_name):
 #     try:
