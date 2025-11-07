@@ -108,6 +108,32 @@ class DirBox():
     def set_sensitive(self, v):
         self.dir_bt.set_sensitive(v)
 
+class StatusPanel():
+    def __init__(self):
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.box.set_spacing(8)
+        self.box.set_margin_top(8)
+        self.box.set_margin_start(8)
+        self.box.set_margin_end(16)
+
+        self.status_label = Gtk.Label()
+        self.box.append(self.status_label)
+        expander = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        expander.set_hexpand(True)
+        self.box.append(expander)
+        self.count_label = Gtk.Label()
+        self.count_label.set_text("0")
+        self.box.append(self.count_label)
+
+    def get_box(self):
+        return self.box
+
+    def set_status(self, text):
+        self.status_label.set_text(text)
+
+    def set_count(self, num : int):
+        self.count_label.set_text(str(num))
+
 
 class MainWindow(Gtk.ApplicationWindow):
     app_title = "dircmp"
@@ -142,12 +168,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.center_box.set_margin_end(8)
         self.main_box.append(self.center_box)
 
-        self.status_label = Gtk.Label()
-        self.status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.status_box.set_margin_top(8)
-        self.status_box.set_margin_start(8)
-        self.status_box.append(self.status_label)
-        self.main_box.append(self.status_box)
+        self.status_panel = StatusPanel()
+        self.main_box.append(self.status_panel.get_box())
 
         self.bottom_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.bottom_box.set_spacing(10)
@@ -195,7 +217,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.execute_bt.set_sensitive(False)
 
     def set_status(self, text):
-        self.status_label.set_text(text)
+        self.status_panel.set_status(text)
+
+    def set_count(self, num : int):
+        self.status_panel.set_count(num)
 
     def start_compare(self):
         self.compare_bt.set_sensitive(False)

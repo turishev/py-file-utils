@@ -39,7 +39,6 @@ class DataObject(GObject.GObject):
                  # owner_a='', owner_b=''
                  ):
         super().__init__()
-        print(f"name: {name}")
         self.name = name
         self.diff = diff
         self.type_a = type_a
@@ -356,14 +355,19 @@ class ResultList():
 
 
     def create_item_menu(self, widget, item):
+        print(item)
         gmenu = Gio.Menu()
         gmenu.append("set flags", "app.set-operation-flags")
         gmenu.append("exclude paths from list", "app.exclude-files-from-list")
         gmenu.append("exclude names from list", "app.exclude-names-from-list")
-        gmenu.append("open A", "app.open-selected-file-a")
-        gmenu.append("open B", "app.open-selected-file-b")
-        gmenu.append("open dir A", "app.open-selected-file-dir-a")
-        gmenu.append("open dir B", "app.open-selected-file-dir-b")
+        if item.diff != 'B':
+            gmenu.append("open A", "app.open-selected-file-a")
+        if item.diff != 'A':
+            gmenu.append("open B", "app.open-selected-file-b")
+        if item.diff != 'B':
+            gmenu.append("open dir A", "app.open-selected-file-dir-a")
+        if item.diff != 'A':
+            gmenu.append("open dir B", "app.open-selected-file-dir-b")
 
         menu = Gtk.PopoverMenu.new_from_model(gmenu)
         menu.set_parent(widget)
@@ -451,7 +455,7 @@ class ResultList():
             is_valid,data_index =  iter.next()
 
 
-    def set_oper_flags_butch(self, path, a_to_b, del_a, b_to_a, del_b):
+    def set_oper_flags_batch(self, path, a_to_b, del_a, b_to_a, del_b):
         model = self.store
         for i in range(model.get_n_items()):
             item = model.get_item(i)

@@ -44,15 +44,20 @@ def _compare_handler():
     dir_b = _main_window.get_dir('b')
     opts = _main_window.get_sync_options()
 
-    print(f"compare opts:{opts}")
+    # print(f"compare opts:{opts}")
 
+    aborted = False
+    items_count = 0
     def _add_new_item(item : CompareResultItem):
-        print(f"_add_new_item: {item}")
+        nonlocal items_count
+        # print(f"_add_new_item: {item}")
+        items_count += 1
         _main_window.append_to_list(item)
+        _main_window.set_count(items_count)
         _update_ui()
 
     result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
-    _main_window.stop_operations('Comparing is done')
+    if not aborted: _main_window.stop_operations('Comparing is done')
     _action_status = ActionStatus.WAIT
 
 def _exec_handler():
@@ -67,7 +72,7 @@ def _exec_handler():
     _main_window.execute_operations(oper_list)
     
     def on_break():
-        files.break_operations(True)
+        files.break_operations()
         dialog.operations_end()
         _action_status = ActionStatus.WAIT
 
@@ -77,7 +82,6 @@ def _exec_handler():
     dialog.add_line('Start synchronization')
 
     
-    files.break_operations(False)
     dialog.add_line('Stop synchronization')
     dialog.operations_end()
     _main_window.stop_operations('Operations are ended')
@@ -88,6 +92,7 @@ def _break_operations_handler():
     global _main_window
     global _action_status
     if _action_status != ActionStatus.RUN: return
+    files.break_operations()
     _main_window.stop_operations('Aborted')
     _action_status = ActionStatus.WAIT
 
@@ -162,7 +167,7 @@ def _set_operation_flags():
     def on_done(path='', a_to_b=False, del_a=False, b_to_a=False, del_b=False):
         print(f"on_done path:{path} {a_to_b} {b_to_a} {del_a} {del_b}")
         if path != '':
-            _main_window.result_list.set_oper_flags_butch(path=path, a_to_b=a_to_b, del_a=del_a, b_to_a=b_to_a, del_b=del_b)
+            _main_window.result_list.set_oper_flags_batch(path=path, a_to_b=a_to_b, del_a=del_a, b_to_a=b_to_a, del_b=del_b)
 
     dialog = ExcludeOperFlagsDialog(_main_window, path_list, on_done)
     dialog.present()
