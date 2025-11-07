@@ -39,6 +39,7 @@ class DataObject(GObject.GObject):
                  # owner_a='', owner_b=''
                  ):
         super().__init__()
+        print(f"name: {name}")
         self.name = name
         self.diff = diff
         self.type_a = type_a
@@ -284,26 +285,30 @@ class ResultList():
         widget.add_controller(click)
 
     def append(self, item : CompareResultItem):
-        obj = DataObject(item.name,
-                         item.diff,
-                         '' if item.file_a is None else item.file_a.type,
-                         '' if item.file_b is None else item.file_b.type,
-                         -1 if item.file_a is None else item.file_a.size,
-                         -1 if item.file_b is None else item.file_b.size,
-                         -1 if item.file_a is None else item.file_a.time,
-                         -1 if item.file_b is None else item.file_b.time,
-                         # '' if item.file_a is None else item.file_a.owner,
-                         # '' if item.file_b is None else item.file_b.owner
+        try:
+            obj = DataObject(item.name,
+                             item.diff,
+                             '' if item.file_a is None else item.file_a.type,
+                             '' if item.file_b is None else item.file_b.type,
+                             -1 if item.file_a is None else item.file_a.size,
+                             -1 if item.file_b is None else item.file_b.size,
+                             -1 if item.file_a is None else item.file_a.time,
+                             -1 if item.file_b is None else item.file_b.time,
+                             # '' if item.file_a is None else item.file_a.owner,
+                             # '' if item.file_b is None else item.file_b.owner
                          '' if item.file_a is None else item.file_a.path,
                          '' if item.file_b is None else item.file_b.path,
-                         )
+                             )
 
-        self.store.append(obj)
-        model = self.selection
-        model.select_item(0, True)
-        self.list_view.scroll_to(0,
-                                 self.name_column,
-                                 flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+            self.store.append(obj)
+            model = self.selection
+            model.select_item(0, True)
+            self.list_view.scroll_to(0,
+                                     self.name_column,
+                                     flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+        except Exception as e:# we can run into error if name in invalid encoding
+            print(f"Error of creating DataObject:{e}")
+
 
     def clear(self):
         self.store.remove_all()
