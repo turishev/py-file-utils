@@ -143,7 +143,7 @@ class ExcludeOperFlagsDialog(Gtk.Dialog):
         self.del_a_cb = self.make_cb('del A', box_1)
         self.b_to_a_cb = self.make_cb('B->A', box_1)
         self.del_b_cb = self.make_cb('del B', box_1)
-        
+
         self.add_button("Cancel", Gtk.ResponseType.CANCEL)
         self.add_button("OK", Gtk.ResponseType.OK)
         self.set_default_response(Gtk.ResponseType.OK)
@@ -213,7 +213,7 @@ class ExecLogDialog(Gtk.Dialog):
 
     def on_close_request(self, dialog):
         # Returning True stops the signal propagation and prevents the close.
-        return True 
+        return True
 
     def on_response(self, widget, response_id):
         print(f"on_response {response_id}")

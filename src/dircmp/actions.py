@@ -17,6 +17,7 @@ from shortcuts import shortcuts;
 class ActionStatus(enum.Enum):
     WAIT = 0
     RUN = 1
+    ABORT = 2
 
 _action_status = ActionStatus.WAIT
 #_main_window = None
@@ -26,13 +27,13 @@ def _update_ui():
     while GLib.MainContext.default().pending():
         GLib.MainContext.default().iteration(False)
 
-def _quit_handler():
+def quit_handler():
     global _main_window
     # self.file_ops.stop_calculation()
     _main_window.destroy()
 
 
-def _compare_handler():
+def compare_handler():
     global _main_window
     global _action_status
 
@@ -46,7 +47,6 @@ def _compare_handler():
 
     # print(f"compare opts:{opts}")
 
-    aborted = False
     items_count = 0
     def _add_new_item(item : CompareResultItem):
         nonlocal items_count
@@ -57,21 +57,22 @@ def _compare_handler():
         _update_ui()
 
     result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
-    if not aborted: _main_window.stop_operations('Comparing is done')
+    if _action_status != ActionStatus.ABORT: _main_window.stop_operations('Comparing is done')
     _action_status = ActionStatus.WAIT
 
-def _exec_handler():
+def exec_handler():
     global _main_window
     global _action_status
 
-    if _action_status == ActionStatus.RUN: return
+    if _action_status != ActionStatus.WAIT: return
     _action_status = ActionStatus.RUN
 
     oper_list = _main_window.get_oper_list()
     print(f"oper_list:{oper_list}")
     _main_window.execute_operations(oper_list)
-    
+
     def on_break():
+        global _action_status
         files.break_operations()
         dialog.operations_end()
         _action_status = ActionStatus.WAIT
@@ -81,23 +82,23 @@ def _exec_handler():
     dialog.present()
     dialog.add_line('Start synchronization')
 
-    
+
     dialog.add_line('Stop synchronization')
     dialog.operations_end()
     _main_window.stop_operations('Operations are ended')
     _action_status = ActionStatus.WAIT
 
 
-def _break_operations_handler():
+def break_operations_handler():
     global _main_window
     global _action_status
     if _action_status != ActionStatus.RUN: return
     files.break_operations()
     _main_window.stop_operations('Aborted')
-    _action_status = ActionStatus.WAIT
+    _action_status = ActionStatus.ABORT
 
 
-def _open_selected_file_handler(letter : str):
+def open_selected_file_handler(letter : str):
     if _action_status == ActionStatus.RUN: return
     path = _main_window.result_list.get_selected_file_path(letter)
     print(f"_open_selected_file_handler {letter} {path}")
@@ -110,7 +111,7 @@ def _open_selected_file_handler(letter : str):
               stderr=STDOUT)
 
 
-def _open_selected_file_dir_handler(letter : str):
+def open_selected_file_dir_handler(letter : str):
     if _action_status == ActionStatus.RUN: return
     path = _main_window.result_list.get_selected_file_path(letter)
     print(f"_open_selected_file_dir_handler {letter} {path}")
@@ -139,7 +140,7 @@ def _open_selected_file_dir_handler(letter : str):
     #                         f"File or dir '{file_name}' will be deleted, do continue?",
     #                         do_delete)
 
-def _open_dir_handler(letter):
+def open_dir_handler(letter):
     global _main_window
     global _action_status
 
@@ -150,14 +151,14 @@ def _open_dir_handler(letter):
                          lambda dir: _main_window.set_dir(letter, dir))
 
 
-def _set_oper_flags_handler(oper :  OperType):
+def set_oper_flags_handler(oper :  OperType):
     global _main_window
     global _action_status
     if _action_status == ActionStatus.RUN: return
     _main_window.result_list.set_oper_flags_for_selected_items(oper)
 
 
-def _set_operation_flags():
+def set_operation_flags():
     global _main_window
     global _action_status
     if _action_status == ActionStatus.RUN: return
@@ -174,7 +175,7 @@ def _set_operation_flags():
 
 
 
-def _exclude_files_from_list():
+def exclude_files_from_list():
     global _main_window
     global _action_status
     if _action_status == ActionStatus.RUN: return
@@ -190,7 +191,8 @@ def _exclude_files_from_list():
     dialog = ExcludeFilesDialog(_main_window, path_list, on_done)
     dialog.present()
 
-def _exclude_names_from_list():
+
+def exclude_names_from_list():
     global _main_window
     global _action_status
     if _action_status == ActionStatus.RUN: return
@@ -206,23 +208,23 @@ def _exclude_names_from_list():
 
 
 _actions = [
-    ('quit', _quit_handler),
-    ('compare-dirs', _compare_handler),
-    ('exec-operations', _exec_handler),
-    ('break-operations', _break_operations_handler),
-    ('select-dir-a', lambda: _open_dir_handler('a')),
-    ('select-dir-b', lambda: _open_dir_handler('b')),
-    ('open-selected-file-a', lambda: _open_selected_file_handler('a')),
-    ('open-selected-file-b', lambda: _open_selected_file_handler('b')),
-    ('open-selected-file-dir-a', lambda: _open_selected_file_dir_handler('a')),
-    ('open-selected-file-dir-b', lambda: _open_selected_file_dir_handler('b')),
-    ('selected-files-a-to-b', lambda: _set_oper_flags_handler(OperType.COPY_AB)),
-    ('selected-files-del-a', lambda: _set_oper_flags_handler(OperType.DEL_A)),
-    ('selected-files-b-to-a', lambda: _set_oper_flags_handler(OperType.COPY_BA)),
-    ('selected-files-del-b', lambda: _set_oper_flags_handler(OperType.DEL_B)),
-    ('set-operation-flags', _set_operation_flags),
-    ('exclude-files-from-list', _exclude_files_from_list),
-    ('exclude-names-from-list', _exclude_names_from_list),
+    ('quit', quit_handler),
+    ('compare-dirs', compare_handler),
+    ('exec-operations', exec_handler),
+    ('break-operations', break_operations_handler),
+    ('select-dir-a', lambda: open_dir_handler('a')),
+    ('select-dir-b', lambda: open_dir_handler('b')),
+    ('open-selected-file-a', lambda: open_selected_file_handler('a')),
+    ('open-selected-file-b', lambda: open_selected_file_handler('b')),
+    ('open-selected-file-dir-a', lambda: open_selected_file_dir_handler('a')),
+    ('open-selected-file-dir-b', lambda: open_selected_file_dir_handler('b')),
+    ('selected-files-a-to-b', lambda: set_oper_flags_handler(OperType.COPY_AB)),
+    ('selected-files-del-a', lambda: set_oper_flags_handler(OperType.DEL_A)),
+    ('selected-files-b-to-a', lambda: set_oper_flags_handler(OperType.COPY_BA)),
+    ('selected-files-del-b', lambda: set_oper_flags_handler(OperType.DEL_B)),
+    ('set-operation-flags', set_operation_flags),
+    ('exclude-files-from-list', exclude_files_from_list),
+    ('exclude-names-from-list', exclude_names_from_list),
 ]
 
 

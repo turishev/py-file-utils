@@ -25,7 +25,6 @@ _break_operations = False
 
 def break_operations():
     global _break_operations
-    print("BREAK_OPERATIONS")
     _break_operations = True
 
 def _get_file_info(path : Path):
@@ -72,32 +71,32 @@ def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None, opts : Syn
 
 
 def _compare_dirs(dir_a : Path, dir_b : Path, opts : SyncOptions, reverse_dir=False, result={},
-                  on_item : Callable[[CompareResultItem], None] | None =None):
+                  on_item : Callable[[CompareResultItem], None] | None =None) -> None:
     global _break_operations
     dir_a_len = len(str(dir_a))
 
     for pcur_dir, _, files in Path.walk(dir_a, follow_symlinks=False):
-        if _break_operations:
-            print("BREAK_OPERATIONS - return")
-            return
-
         sub_dir = str(pcur_dir)[dir_a_len:]
         cur_dir_b = Path(str(dir_b) + sub_dir)
 
         for f in files:
-            name = f if sub_dir == '' else str(PurePath(sub_dir[1:], f))
+           if _break_operations:
+               _break_operations = False
+               return
 
-            if result.get(name) is None:
-                path_a = pcur_dir / f
-                path_b = (cur_dir_b / f).resolve()
-                info_a = _get_file_info(path_a)
-                info_b = _get_file_info(path_b) if path_b.exists() else None
-                diff = _compare_info(info_b, info_a, opts) if reverse_dir else _compare_info(info_a, info_b, opts)
-                file_a = info_a if not reverse_dir else info_b
-                file_b = info_b if not reverse_dir else info_a
-                item = CompareResultItem(name=name, diff=diff, file_a=file_a, file_b=file_b)
-                result[name] = item
-                if on_item is not None and diff != '': on_item(item)
+           name = f if sub_dir == '' else str(PurePath(sub_dir[1:], f))
+
+           if result.get(name) is None:
+               path_a = pcur_dir / f
+               path_b = (cur_dir_b / f).resolve()
+               info_a = _get_file_info(path_a)
+               info_b = _get_file_info(path_b) if path_b.exists() else None
+               diff = _compare_info(info_b, info_a, opts) if reverse_dir else _compare_info(info_a, info_b, opts)
+               file_a = info_a if not reverse_dir else info_b
+               file_b = info_b if not reverse_dir else info_a
+               item = CompareResultItem(name=name, diff=diff, file_a=file_a, file_b=file_b)
+               result[name] = item
+               if on_item is not None and diff != '': on_item(item)
 
 
 def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
@@ -112,7 +111,7 @@ def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
 
     if opts.sync_direction != SyncDirection.B_TO_A:
         _compare_dirs(adir_a, adir_b, opts, False, result, on_item)
-    if opts.sync_direction != SyncDirection.A_TO_B:
+    if opts.sync_direction != SyncDirection.A_TO_B and not _break_operations:
         _compare_dirs(adir_b, adir_a, opts, True, result, on_item)
     return [v for v in result.values() if v.diff != ''] # return only different files
 
