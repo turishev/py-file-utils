@@ -77,11 +77,16 @@ def exec_handler():
         dialog.operations_end()
         _action_status = ActionStatus.WAIT
 
-
     dialog = ExecLogDialog(_main_window, on_break)
     dialog.present()
     dialog.add_line('Start synchronization')
 
+
+    def log_item(text):
+        print(f"item {text}")
+        dialog.add_line(text)
+
+    files.execute_operations(oper_list, log_item)
 
     dialog.add_line('Stop synchronization')
     dialog.operations_end()

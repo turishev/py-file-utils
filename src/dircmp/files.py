@@ -22,21 +22,48 @@ _file_types = {8 : 'file',
 
 
 _break_operations = False
+_dummy_file_info  = FileInfo(path='', type='', size=0, owner='', time=0)
+
+def file_size(file):
+    if file.exists(follow_symlinks=False):
+        return file.stat(follow_symlinks=False).st_size
+    else:
+        print(f'file {file} doesn\'t exist')
+        return 0
+
+
+def file_type(mode):
+    return _file_types.get(mode >> 12, '?')
+
+
+def owner(uid, gid):
+    uname = pwd.getpwuid(uid)[0]
+    gname = grp.getgrgid(gid)[0]
+    return uname + ":" + gname
+
+
+def perm(mode):
+    return hex(mode & 0o7777)
+
+
+def _get_file_info(path : Path):
+    if path.exists():
+        st = path.stat()
+
+        return FileInfo(
+            path=str(path),
+            size=st.st_size,
+            time=st.st_mtime,
+            type=file_type(st.st_mode),
+            owner=owner(st.st_uid, st.st_gid),
+        )
+    else:
+        print(f"file '{str(path)}' doesn't exists")
+        return _dummy_file_info
 
 def break_operations():
     global _break_operations
     _break_operations = True
-
-def _get_file_info(path : Path):
-    st = path.stat()
-
-    return FileInfo(
-        path=str(path),
-        size=st.st_size,
-        time=st.st_mtime,
-        type=file_type(st.st_mode),
-        owner=owner(st.st_uid, st.st_gid),
-    )
 
 
 def calculate_file_hash(file_path: Path, algorithm="md5"):
@@ -55,9 +82,9 @@ def _compare_content(path_a : str, path_b : str):
 
 
 def _compare_info(info_a : FileInfo | None, info_b : FileInfo | None, opts : SyncOptions) -> str:
-    if info_a is None and info_b is None: return ''
-    if info_a is None and info_b is not None: return 'B'
-    if info_a is not None and info_b is None: return 'A'
+    if info_a.type == ''  and info_b == '': return ''
+    if info_a.type == '' and info_b.type != '': return 'B'
+    if info_a.type != '' and info_b.type == '': return 'A'
 
     res = ''
 
@@ -90,7 +117,7 @@ def _compare_dirs(dir_a : Path, dir_b : Path, opts : SyncOptions, reverse_dir=Fa
                path_a = pcur_dir / f
                path_b = (cur_dir_b / f).resolve()
                info_a = _get_file_info(path_a)
-               info_b = _get_file_info(path_b) if path_b.exists() else None
+               info_b = _get_file_info(path_b) if path_b.exists() else FileInfo(path=str(path_b), type='', size=0, owner='', time=0)
                diff = _compare_info(info_b, info_a, opts) if reverse_dir else _compare_info(info_a, info_b, opts)
                file_a = info_a if not reverse_dir else info_b
                file_b = info_b if not reverse_dir else info_a
@@ -116,6 +143,33 @@ def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
     return [v for v in result.values() if v.diff != ''] # return only different files
 
 
+def execute_operations(oper_list : list[Oper], logger : Callable[[str], None]) -> None:
+    global _break_operations
+    _break_operations = False
+
+    for oper in oper_list:
+        if _break_operations:
+            _break_operations = False
+            return
+        print(oper)
+        if oper.type == OperType.COPY_AB:
+            logger(f"CP: {oper.path_a} -> {oper.path_b}")
+        elif oper.type == OperType.COPY_BA:
+            logger(f"CP: {oper.path_b} -> {oper.path_a}")
+        elif oper.type == OperType.MOVE_AB:
+            logger(f"MV: {oper.path_a} -> {oper.path_b}")
+        elif oper.type == OperType.MOVE_BA:
+            logger(f"MV: {oper.path_b} -> {oper.path_a}")
+        elif oper.type == OperType.DEL_A:
+            logger(f"RM: {oper.path_a}")
+        elif oper.type == OperType.DEL_B:
+            logger(f"RM: {oper.path_b}")
+        elif oper.type == OperType.DEL_AB:
+            logger(f"RM: {oper.path_a}")
+            logger(f"RM: {oper.path_b}")
+        
+
+
 # def delete(self, file_name):
 #     try:
 #         if not self.root_dir is None:
@@ -130,28 +184,6 @@ def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
 #         print(e)
 #         if not self.eror_handler is None:
 #             self.eror_handler(info)
-
-
-def file_size(file):
-    if file.exists(follow_symlinks=False):
-        return file.stat(follow_symlinks=False).st_size
-    else:
-        print(f'file {file} doesn\'t exist')
-        return 0
-
-
-def file_type(mode):
-    return _file_types[mode >> 12]
-
-
-def owner(uid, gid):
-    uname = pwd.getpwuid(uid)[0]
-    gname = grp.getgrgid(gid)[0]
-    return uname + ":" + gname
-
-
-def perm(mode):
-    return hex(mode & 0o7777)
 
 
 def make_path_list(path : str) -> list[str]:
