@@ -2,11 +2,10 @@ from __future__ import annotations # for list annotations
 from typing import TypeAlias
 from collections.abc import Callable
 
-
 import pwd
 import grp
 from pathlib import Path, PurePath
-# from hashlib import file_digest
+import shutil
 import hashlib
 
 
@@ -143,6 +142,20 @@ def compare_dirs(dir_a : str, dir_b : str, opts : SyncOptions,
     return [v for v in result.values() if v.diff != ''] # return only different files
 
 
+def _copy_file(path_a : str, path_b : str):
+    pa = Path(path_a)
+    pb = Path(path_b)
+    if not pb.parent.exists(): pb.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(pa, pb)
+
+def _move_file(path_a : str, path_b : str):
+    pa = Path(path_a)
+    pb = Path(path_b)
+    if not pb.parent.exists(): pb.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(pa, pb)
+
+
+
 def execute_operations(oper_list : list[Oper], logger : Callable[[str], None]) -> None:
     global _break_operations
     _break_operations = False
@@ -156,31 +169,39 @@ def execute_operations(oper_list : list[Oper], logger : Callable[[str], None]) -
         try:
             if oper.type == OperType.COPY_AB:
                 logger(f"CP: {oper.path_a} -> {oper.path_b}")
+                _copy_file(oper.path_a, oper.path_b)
                 logger("OK")
             elif oper.type == OperType.COPY_BA:
                 logger(f"CP: {oper.path_b} -> {oper.path_a}")
+                _copy_file(oper.path_b, oper.path_a)
                 logger("OK")
             elif oper.type == OperType.MOVE_AB:
                 logger(f"MV: {oper.path_a} -> {oper.path_b}")
+                _move_file(oper.path_a, oper.path_b)
                 logger("OK")
             elif oper.type == OperType.MOVE_BA:
                 logger(f"MV: {oper.path_b} -> {oper.path_a}")
+                _move_file(oper.path_b, oper.path_a)
                 logger("OK")
             elif oper.type == OperType.DEL_A:
                 logger(f"RM: {oper.path_a}")
+                Path(oper.path_a).unlink()
                 logger("OK")
             elif oper.type == OperType.DEL_B:
                 logger(f"RM: {oper.path_b}")
+                Path(oper.path_b).unlink()
                 logger("OK")
             elif oper.type == OperType.DEL_AB:
                 logger(f"RM: {oper.path_a}")
+                Path(oper.path_a).unlink()
                 logger("OK")
                 logger(f"RM: {oper.path_b}")
+                Path(oper.path_b).unlink()
                 logger("OK")
         except Exception as e:
             logger("ERROR")
+            logger(str(oper))
             logger(str(e))
-
 
 
 # def delete(self, file_name):
