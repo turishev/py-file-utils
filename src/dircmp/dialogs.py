@@ -229,19 +229,17 @@ class ExecLogDialog(Gtk.Dialog):
             print("cancel")
 
 
+def show_confirm_dialog(parent, message, on_ok):
+    def do_act(source_obj, async_res):
+        if source_obj.choose_finish(async_res) == 1:
+            print("OK")
+            on_ok()
+        else:
+            print("Cancel")
 
-
-# def show_confirm_dialog(parent, message, on_ok):
-#     def do_act(source_obj, async_res):
-#         if source_obj.choose_finish(async_res) == 1:
-#             print("OK")
-#             on_ok()
-#         else:
-#             print("Cancel")
-
-#     alert = Gtk.AlertDialog()
-#     alert.set_message(message)
-#     alert.set_modal(True)
-#     alert.set_buttons(["Cancel", "OK"])
-#     alert.set_default_button(0)
-#     alert.choose(parent, None, do_act)
+    alert = Gtk.AlertDialog()
+    alert.set_message(message)
+    alert.set_modal(True)
+    alert.set_buttons(["Cancel", "OK"])
+    alert.set_default_button(0)
+    alert.choose(parent, None, do_act)

@@ -10,7 +10,7 @@ from pathlib import PurePath
 
 from app_types import *
 import files
-from dialogs import show_open_dir_dialog, ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
+from dialogs import show_open_dir_dialog, show_confirm_dialog,  ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
 from shortcuts import shortcuts;
 
 
@@ -61,37 +61,36 @@ def compare_handler():
     _action_status = ActionStatus.WAIT
 
 def exec_handler():
-    global _main_window
     global _action_status
-
     if _action_status != ActionStatus.WAIT: return
-    _action_status = ActionStatus.RUN
 
-    oper_list = _main_window.get_oper_list()
-    print(f"oper_list:{oper_list}")
-    _main_window.execute_operations(oper_list)
-
-    def on_break():
+    def start_exec():
+        global _main_window
         global _action_status
-        files.break_operations()
+        _action_status = ActionStatus.RUN
+
+        oper_list = _main_window.get_oper_list()
+        _main_window.execute_operations(oper_list)
+
+        def on_break():
+            global _action_status
+            files.break_operations()
+            dialog.operations_end()
+            _action_status = ActionStatus.WAIT
+
+        dialog = ExecLogDialog(_main_window, on_break)
+        dialog.present()
+        dialog.add_line('Start synchronization')
+
+        files.execute_operations(oper_list, lambda text: dialog.add_line(text))
+
+        dialog.add_line('Synchronization is done')
         dialog.operations_end()
+        _main_window.stop_operations('Operations are ended')
         _action_status = ActionStatus.WAIT
 
-    dialog = ExecLogDialog(_main_window, on_break)
-    dialog.present()
-    dialog.add_line('Start synchronization')
+    show_confirm_dialog(_main_window, "All operations will be executed. Proceed it?", start_exec)
 
-
-    def log_item(text):
-        print(f"item {text}")
-        dialog.add_line(text)
-
-    files.execute_operations(oper_list, log_item)
-
-    dialog.add_line('Stop synchronization')
-    dialog.operations_end()
-    _main_window.stop_operations('Operations are ended')
-    _action_status = ActionStatus.WAIT
 
 
 def break_operations_handler():
