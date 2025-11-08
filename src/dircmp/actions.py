@@ -57,26 +57,28 @@ def compare_handler():
         _update_ui()
 
     result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
-    if _action_status != ActionStatus.ABORT: _main_window.stop_operations('Comparing is done')
+    _main_window.end_compare(abort=_action_status == ActionStatus.ABORT)
     _action_status = ActionStatus.WAIT
+
 
 def exec_handler():
     global _action_status
     if _action_status != ActionStatus.WAIT: return
 
-    def start_exec():
+    def do_oper():
         global _main_window
         global _action_status
         _action_status = ActionStatus.RUN
 
         oper_list = _main_window.get_oper_list()
+        _main_window.result_list.clear()
         _main_window.execute_operations(oper_list)
 
+        aborted = False
         def on_break():
-            global _action_status
+            nonlocal aborted
             files.break_operations()
-            dialog.operations_end()
-            _action_status = ActionStatus.WAIT
+            aborted = True
 
         dialog = ExecLogDialog(_main_window, on_break)
         dialog.present()
@@ -84,21 +86,21 @@ def exec_handler():
 
         files.execute_operations(oper_list, lambda text: dialog.add_line(text))
 
-        dialog.add_line('Synchronization is done')
+        fin_line = 'Synchronization is aborted' if aborted else 'Synchronization is done'
+        dialog.add_line(fin_line)
         dialog.operations_end()
-        _main_window.stop_operations('Operations are ended')
+        _main_window.end_execution(abort=aborted)
         _action_status = ActionStatus.WAIT
 
-    show_confirm_dialog(_main_window, "All operations will be executed. Proceed it?", start_exec)
+    show_confirm_dialog(_main_window, "All operations will be executed. Proceed it?", do_oper)
 
 
-
-def break_operations_handler():
+def abort_compare():
     global _main_window
     global _action_status
     if _action_status != ActionStatus.RUN: return
     files.break_operations()
-    _main_window.stop_operations('Aborted')
+    _main_window.end_compare(abort=True)
     _action_status = ActionStatus.ABORT
 
 
@@ -129,20 +131,20 @@ def open_selected_file_dir_handler(letter : str):
               stderr=STDOUT)
 
 
-    # def delete_handler(self):
-    #     if self.status == ActionStatus.RUN: return
-    #     result_list = self.win.result_list
-    #     file_name = result_list.get_selected_name()
-    #     print("delete:"  +  file_name)
+# def delete_handler(self):
+#     if self.status == ActionStatus.RUN: return
+#     result_list = self.win.result_list
+#     file_name = result_list.get_selected_name()
+#     print("delete:"  +  file_name)
 
-    #     def do_delete():
-    #         print("do_delete:" + file_name)
-    #         self.win.result_list.delete_selected_item()
-    #         self.file_ops.delete(file_name)
+#     def do_delete():
+#         print("do_delete:" + file_name)
+#         self.win.result_list.delete_selected_item()
+#         self.file_ops.delete(file_name)
 
-    #     show_confirm_dialog(self.win,
-    #                         f"File or dir '{file_name}' will be deleted, do continue?",
-    #                         do_delete)
+#     show_confirm_dialog(self.win,
+#                         f"File or dir '{file_name}' will be deleted, do continue?",
+#                         do_delete)
 
 def open_dir_handler(letter):
     global _main_window
@@ -215,7 +217,7 @@ _actions = [
     ('quit', quit_handler),
     ('compare-dirs', compare_handler),
     ('exec-operations', exec_handler),
-    ('break-operations', break_operations_handler),
+    ('break-operations', abort_compare),
     ('select-dir-a', lambda: open_dir_handler('a')),
     ('select-dir-b', lambda: open_dir_handler('b')),
     ('open-selected-file-a', lambda: open_selected_file_handler('a')),

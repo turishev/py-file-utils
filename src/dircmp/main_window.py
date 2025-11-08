@@ -122,7 +122,7 @@ class StatusPanel():
         expander.set_hexpand(True)
         self.box.append(expander)
         self.count_label = Gtk.Label()
-        self.count_label.set_text("0")
+        self.count_label.set_text("")
         self.box.append(self.count_label)
 
     def get_box(self):
@@ -132,7 +132,7 @@ class StatusPanel():
         self.status_label.set_text(text)
 
     def set_count(self, num : int):
-        self.count_label.set_text(str(num))
+        self.count_label.set_text(f"records: {num}")
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -231,15 +231,8 @@ class MainWindow(Gtk.ApplicationWindow):
         self.result_list.clear()
         self.set_status('Comparing..')
 
-    def execute_operations(self, oper_list):
-        self.compare_bt.set_sensitive(False)
-        self.execute_bt.set_sensitive(False)
-        self.dir_a_box.set_sensitive(False)
-        self.dir_b_box.set_sensitive(False)
-        self.break_bt.set_sensitive(True)
-        self.set_status('Executing..')
-
-    def stop_operations(self, status : str):
+    def end_compare(self, abort=False):
+        status = "Comparing aborted" if abort else  "Comparing finished" 
         self.compare_bt.set_sensitive(True)
         if self.result_list.get_list_len() > 0: self.execute_bt.set_sensitive(True)
         self.break_bt.set_sensitive(False)
@@ -247,6 +240,23 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_box.set_sensitive(True)
         self.set_status(status)
 
+    def execute_operations(self, oper_list):
+        self.result_list.clear()
+        self.compare_bt.set_sensitive(False)
+        self.execute_bt.set_sensitive(False)
+        self.dir_a_box.set_sensitive(False)
+        self.dir_b_box.set_sensitive(False)
+        self.break_bt.set_sensitive(True)
+        self.set_status('Executing..')
+
+    def end_execution(self, abort=False):
+        status = "Execution aborted" if abort else  "Execution finished" 
+        self.compare_bt.set_sensitive(True)
+        self.break_bt.set_sensitive(False)
+        self.dir_a_box.set_sensitive(True)
+        self.dir_b_box.set_sensitive(True)
+        self.set_status(status)
+        self.set_count(0)
 
     def set_dir(self, letter, dir):
         if letter == 'a': self.dir_a_box.set_dir(dir)

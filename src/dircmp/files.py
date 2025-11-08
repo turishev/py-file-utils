@@ -152,22 +152,35 @@ def execute_operations(oper_list : list[Oper], logger : Callable[[str], None]) -
             _break_operations = False
             return
         print(oper)
-        if oper.type == OperType.COPY_AB:
-            logger(f"CP: {oper.path_a} -> {oper.path_b}")
-        elif oper.type == OperType.COPY_BA:
-            logger(f"CP: {oper.path_b} -> {oper.path_a}")
-        elif oper.type == OperType.MOVE_AB:
-            logger(f"MV: {oper.path_a} -> {oper.path_b}")
-        elif oper.type == OperType.MOVE_BA:
-            logger(f"MV: {oper.path_b} -> {oper.path_a}")
-        elif oper.type == OperType.DEL_A:
-            logger(f"RM: {oper.path_a}")
-        elif oper.type == OperType.DEL_B:
-            logger(f"RM: {oper.path_b}")
-        elif oper.type == OperType.DEL_AB:
-            logger(f"RM: {oper.path_a}")
-            logger(f"RM: {oper.path_b}")
-        
+
+        try:
+            if oper.type == OperType.COPY_AB:
+                logger(f"CP: {oper.path_a} -> {oper.path_b}")
+                logger("OK")
+            elif oper.type == OperType.COPY_BA:
+                logger(f"CP: {oper.path_b} -> {oper.path_a}")
+                logger("OK")
+            elif oper.type == OperType.MOVE_AB:
+                logger(f"MV: {oper.path_a} -> {oper.path_b}")
+                logger("OK")
+            elif oper.type == OperType.MOVE_BA:
+                logger(f"MV: {oper.path_b} -> {oper.path_a}")
+                logger("OK")
+            elif oper.type == OperType.DEL_A:
+                logger(f"RM: {oper.path_a}")
+                logger("OK")
+            elif oper.type == OperType.DEL_B:
+                logger(f"RM: {oper.path_b}")
+                logger("OK")
+            elif oper.type == OperType.DEL_AB:
+                logger(f"RM: {oper.path_a}")
+                logger("OK")
+                logger(f"RM: {oper.path_b}")
+                logger("OK")
+        except Exception as e:
+            logger("ERROR")
+            logger(str(e))
+
 
 
 # def delete(self, file_name):
