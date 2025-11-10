@@ -15,24 +15,20 @@ from app_types import *
 class DataObject(GObject.GObject):
     __gtype_name__ = 'DataObject'
 
-    name = GObject.Property(type=GObject.TYPE_STRING, default="")
-    diff = GObject.Property(type=GObject.TYPE_STRING, default="")
-    a_to_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
-    del_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False)
-    b_to_a = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False) # use INT instead BOOLEAN for sake of sort support
-    del_b = GObject.Property(type=GObject.TYPE_BOOLEAN, default=False) # use INT instead BOOLEAN for sake of sort support
-    type_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    type_b = GObject.Property(type=GObject.TYPE_STRING, default="")
-    size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1)
-    size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1)
-    time_a = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
-    time_b = GObject.Property(type=GObject.TYPE_DOUBLE, default=0)
-    # owner_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    # owner_b = GObject.Property(type=GObject.TYPE_STRING, default="")
-    # perm_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    # perm_b = GObject.Property(type=GObject.TYPE_STRING, default="")
-    path_a = GObject.Property(type=GObject.TYPE_STRING, default="")
-    path_b = GObject.Property(type=GObject.TYPE_STRING, default="")
+    name = GObject.Property(type=str, default="")
+    diff = GObject.Property(type=str, default="")
+    a_to_b = GObject.Property(type=bool, default=False)
+    del_a = GObject.Property(type=bool, default=False)
+    b_to_a = GObject.Property(type=bool, default=False) # use INT instead BOOLEAN for sake of sort support
+    del_b = GObject.Property(type=bool, default=False) # use INT instead BOOLEAN for sake of sort support
+    type_a = GObject.Property(type=str, default="")
+    type_b = GObject.Property(type=str, default="")
+    size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1) # not int!
+    size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1) # not int!
+    time_a = GObject.Property(type=float, default=0.0)
+    time_b = GObject.Property(type=float, default=0.0)
+    path_a = GObject.Property(type=str, default="")
+    path_b = GObject.Property(type=str, default="")
 
     def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b,
                  path_a, path_b,
@@ -240,8 +236,7 @@ class ResultList():
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'B': cb.set_sensitive(False)
-        else:  cb.set_active(obj.a_to_b > 0)
-        obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_b_to_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -251,8 +246,7 @@ class ResultList():
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'A': cb.set_sensitive(False)
-        else: cb.set_active(obj.b_to_a > 0)
-        obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -262,8 +256,7 @@ class ResultList():
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'B': cb.set_sensitive(False)
-        else: cb.set_active(obj.del_a > 0)
-        obj.bind_property("del_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("del_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_b(self, factory, item):
         cb = Gtk.CheckButton()
@@ -273,8 +266,7 @@ class ResultList():
         cb = item.get_child()
         obj = item.get_item()
         if obj.diff == 'A': cb.set_sensitive(False)
-        else: cb.set_active(obj.del_b > 0)
-        obj.bind_property("del_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("del_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
@@ -285,18 +277,18 @@ class ResultList():
 
     def append(self, item : CompareResultItem):
         try:
-            obj = DataObject(item.name,
-                             item.diff,
-                             '' if item.file_a is None else item.file_a.type,
-                             '' if item.file_b is None else item.file_b.type,
-                             -1 if item.file_a is None else item.file_a.size,
-                             -1 if item.file_b is None else item.file_b.size,
-                             -1 if item.file_a is None else item.file_a.time,
-                             -1 if item.file_b is None else item.file_b.time,
+            obj = DataObject(name=item.name,
+                             diff=item.diff,
+                             type_a='' if item.file_a is None else item.file_a.type,
+                             type_b='' if item.file_b is None else item.file_b.type,
+                             size_a=-1 if item.file_a is None else item.file_a.size,
+                             size_b=-1 if item.file_b is None else item.file_b.size,
+                             time_a=-1 if item.file_a is None else item.file_a.time,
+                             time_b=-1 if item.file_b is None else item.file_b.time,
                              # '' if item.file_a is None else item.file_a.owner,
                              # '' if item.file_b is None else item.file_b.owner
-                         '' if item.file_a is None else item.file_a.path,
-                         '' if item.file_b is None else item.file_b.path,
+                             path_a='' if item.file_a is None else item.file_a.path,
+                             path_b='' if item.file_b is None else item.file_b.path,
                              )
 
             self.store.append(obj)
