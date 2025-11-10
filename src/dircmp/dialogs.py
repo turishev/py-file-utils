@@ -45,11 +45,9 @@ class ExcludeFilesDialog(Gtk.Dialog):
 
     def on_response(self, widget, response_id):
         if response_id == Gtk.ResponseType.OK:
-            print("The OK button was clicked")
             inx = self.selector.get_selected()
             self.on_done(self.path_list[inx])
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("The Cancel button was clicked")
             self.on_done('')
         self.destroy()
 
@@ -103,14 +101,11 @@ class ExcludeNamesDialog(Gtk.Dialog):
     def on_radio_toggled(self, button, name):
         if button.get_active():
             self.active_option = name
-            print(f"Radio button {name} is active")
 
     def on_response(self, widget, response_id):
         if response_id == Gtk.ResponseType.OK:
-            print("The OK button was clicked")
             self.on_done((self.active_option, self.entry.get_text()))
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("The Cancel button was clicked")
             self.on_done(('', ''))
         self.destroy()
 
@@ -150,7 +145,6 @@ class ExcludeOperFlagsDialog(Gtk.Dialog):
 
     def on_response(self, widget, response_id):
         if response_id == Gtk.ResponseType.OK:
-            print("The OK button was clicked")
             inx = self.selector.get_selected()
             self.on_done(path=self.path_list[inx],
                          a_to_b=self.a_to_b_cb.get_active(),
@@ -218,24 +212,18 @@ class ExecLogDialog(Gtk.Dialog):
     def on_response(self, widget, response_id):
         print(f"on_response {response_id}")
         if response_id == 1:
-            print("break")
             self.on_break()
             self.break_bt.set_sensitive(False)
             self.close_bt.set_sensitive(True)
         elif response_id == Gtk.ResponseType.CLOSE:
-            print('close dialog')
             self.destroy()
         elif response_id == Gtk.ResponseType.CANCEL:
-            print("cancel")
+            pass
 
 
 def show_confirm_dialog(parent, message, on_ok):
     def do_act(source_obj, async_res):
-        if source_obj.choose_finish(async_res) == 1:
-            print("OK")
-            on_ok()
-        else:
-            print("Cancel")
+        if source_obj.choose_finish(async_res) == 1: on_ok()
 
     alert = Gtk.AlertDialog()
     alert.set_message(message)

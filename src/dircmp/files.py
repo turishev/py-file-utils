@@ -164,7 +164,7 @@ def execute_operations(oper_list : list[Oper], logger : Callable[[str], None]) -
         if _break_operations:
             _break_operations = False
             return
-        print(oper)
+        # print(oper)
 
         try:
             if oper.type == OperType.COPY_AB:

@@ -314,9 +314,8 @@ class ResultList():
 
     def on_mouse_right_button_down(self, gesture : Gtk.GestureClick, count: int,
                                    x : float, y : float, cell : Gtk.ColumnViewCell):
-        print("on_mouse_right_button_down")
         data = cell.get_item()
-        print(f"on_mouse_right_button_down: {data}")
+        # print(f"on_mouse_right_button_down: {data}")
         self.select_item(data)
 
     def on_mouse_right_button_up(self, gesture : Gtk.GestureClick, count: int,
@@ -355,7 +354,7 @@ class ResultList():
 
 
     def create_item_menu(self, widget, item):
-        print(item)
+        # print(item)
         gmenu = Gio.Menu()
         gmenu.append("set flags", "app.set-operation-flags")
         gmenu.append("exclude paths from list", "app.exclude-files-from-list")
@@ -373,12 +372,13 @@ class ResultList():
         menu.set_parent(widget)
         return menu
 
+
     def show_item_menu(self, widget, x, y, item):
-        print("show_item_menu")
         menu = self.create_item_menu(widget, item)
         menu.set_offset(x, y)
         menu.set_pointing_to(Gdk.Rectangle(x, y, 1, 1))
         menu.popup()
+
 
     def get_single_selection_item(self):
         sel : Gtk.Bitset = self.selection.get_selection()
@@ -386,12 +386,6 @@ class ResultList():
         inx = sel.get_minimum()
         return self.selection.get_item(inx)
 
-
-    # def delete_selected_item(self):
-    #     print("delete_act_handler")
-    #     item = self.get_selected_item()
-    #     print("file:" + item.name)
-    #     self.delete_item(item)
 
     def get_oper_list(self):
         result = []
