@@ -173,6 +173,7 @@ def exclude_files_from_list():
     def on_done(path):
         if path != '':
             _main_window.result_list.delete_items('starts-with', path)
+            _main_window.set_count(_main_window.result_list.get_list_len())
 
     dialog = ExcludeFilesDialog(_main_window, path_list, on_done)
     dialog.present()
@@ -187,6 +188,7 @@ def exclude_names_from_list():
         print(f"_exclude_names_from_list result:{result}")
         if result is not None:
             _main_window.result_list.delete_items(result[0], result[1])
+            _main_window.set_count(_main_window.result_list.get_list_len())
 
     dialog = ExcludeNamesDialog(_main_window, on_done)
     dialog.present()

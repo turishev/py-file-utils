@@ -164,7 +164,7 @@ class ResultList():
     def bind_size_a(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
-        label.set_text(str(obj.size_a) if obj.size_a >= 0 else '') # -1 is size unknown
+        label.set_text(str(obj.size_a) if obj.size_a > 0 else '') # -1 is size unknown
 
     def setup_size_b(self, factory, item):
         label = Gtk.Label()
@@ -175,7 +175,7 @@ class ResultList():
     def bind_size_b(self, factory, item):
         label = item.get_child()
         obj = item.get_item()
-        label.set_text(str(obj.size_b) if obj.size_b >= 0 else '')# -1 is size unknown
+        label.set_text(str(obj.size_b) if obj.size_b > 0 else '')# -1 is size unknown
 
     def setup_diff(self, factory, item):
         label = Gtk.Label()
