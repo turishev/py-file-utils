@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=dircmp
+Exec=python3 .local/share/dircmp/dircmp.py
+Terminal=false
+# Icon= ~/.local/share/icons/dircmp.png
+Icon=dircmp
+
+Type=Application
+Comment="Comparing directories and synchronization tool"
