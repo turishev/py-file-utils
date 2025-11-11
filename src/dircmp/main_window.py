@@ -269,9 +269,6 @@ class MainWindow(Gtk.ApplicationWindow):
         dir_box = self.dir_a_box if letter == 'a' else self.dir_b_box
         return dir_box.get_dir()
 
-    def append_to_list(self, item  : CompareResultItem):
-        self.result_list.append(item)
-
     def get_sync_options(self) -> SyncOptions:
         return self.options_box.get_options()
 

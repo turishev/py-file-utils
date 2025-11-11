@@ -47,6 +47,10 @@ class DataObject(GObject.GObject):
         self.time_b = time_b
         self.path_a = path_a
         self.path_b = path_b
+        self.a_to_b=False
+        self.del_a=False
+        self.b_to_a=False
+        self.del_b=False
 
 
 def _format_time(tm):
@@ -235,8 +239,9 @@ class ResultList():
     def bind_a_to_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
+        print(f"a_to_b: {obj.name} {obj.diff}")
         if obj.diff == 'B': cb.set_sensitive(False)
-        else: obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_b_to_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -245,8 +250,9 @@ class ResultList():
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
+        print(f"b_to_a: {obj.name} {obj.diff}")
         if obj.diff == 'A': cb.set_sensitive(False)
-        else: obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else: obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_a(self, factory, item):
         cb = Gtk.CheckButton()
@@ -255,8 +261,13 @@ class ResultList():
     def bind_del_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
+        print(f"del_a: {obj.name} {obj.diff}")
         if obj.diff == 'B': cb.set_sensitive(False)
-        else: obj.bind_property("del_a", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        else:
+            obj.bind_property("del_a",
+                              cb,
+                              "active",
+                              GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_b(self, factory, item):
         cb = Gtk.CheckButton()
@@ -265,8 +276,9 @@ class ResultList():
     def bind_del_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
+        print(f"del_b: {obj.name} {obj.diff}")
         if obj.diff == 'A': cb.set_sensitive(False)
-        else: obj.bind_property("del_b", cb , "active", GObject.BindingFlags.BIDIRECTIONAL)
+        # else: obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
@@ -292,11 +304,11 @@ class ResultList():
                              )
 
             self.store.append(obj)
-            model = self.selection
-            model.select_item(0, True)
-            self.list_view.scroll_to(0,
-                                     self.name_column,
-                                     flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+            # model = self.selection
+            # model.select_item(0, True)
+            # self.list_view.scroll_to(0,
+            #                          self.name_column,
+            #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
         except Exception as e:# we can run into error if name in invalid encoding
             print(f"Error of creating DataObject:{e}")
 

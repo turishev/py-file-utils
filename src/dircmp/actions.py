@@ -5,8 +5,11 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 from gi.repository import Gio, GLib
+
 from subprocess import Popen, DEVNULL, STDOUT
 from pathlib import PurePath
+# from threading import Timer
+
 
 from app_types import *
 import files
@@ -49,11 +52,15 @@ def compare_handler():
     def _add_new_item(item : CompareResultItem):
         nonlocal items_count
         items_count += 1
-        _main_window.append_to_list(item)
+        _main_window.result_list.append(item)
         _main_window.set_count(items_count)
-        _update_ui()
+        # _update_ui()
 
     result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
+
+    # for item in result:
+    #     _main_window.result_list.append(item)
+
     _main_window.end_compare(abort=_action_status == ActionStatus.ABORT)
     _action_status = ActionStatus.WAIT
 
