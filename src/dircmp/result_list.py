@@ -232,53 +232,55 @@ class ResultList():
         obj = item.get_item()
         label.set_text(_format_time(obj.time_b))
 
-    def setup_a_to_b(self, factory, item):
-        cb = Gtk.CheckButton()
-        item.set_child(cb)
+    def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
+        # print(f"setup_a_to_b {item}")
+        item.set_child(Gtk.CheckButton())
 
-    def bind_a_to_b(self, factory, item):
+    def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         cb = item.get_child()
-        obj = item.get_item()
-        print(f"a_to_b: {obj.name} {obj.diff}")
-        if obj.diff == 'B': cb.set_sensitive(False)
-        else: obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+        obj : DataObject = item.get_item()
+        # print(f"a_to_b: {item} {obj.name} {obj.diff}")
+        if obj.diff == 'B':
+            cb.set_visible(False)
+        else:
+            cb.set_visible(True)
+            # obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_b_to_a(self, factory, item):
-        cb = Gtk.CheckButton()
-        item.set_child(cb)
+        item.set_child(Gtk.CheckButton())
 
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        print(f"b_to_a: {obj.name} {obj.diff}")
-        if obj.diff == 'A': cb.set_sensitive(False)
-        else: obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+        # print(f"b_to_a: {obj.name} {obj.diff}")
+        if obj.diff == 'A': cb.set_visible(False)
+        else:
+            cb.set_visible(True)
+            # obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_a(self, factory, item):
-        cb = Gtk.CheckButton()
-        item.set_child(cb)
+        item.set_child(Gtk.CheckButton())
 
     def bind_del_a(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        print(f"del_a: {obj.name} {obj.diff}")
-        if obj.diff == 'B': cb.set_sensitive(False)
+        # print(f"del_a: {obj.name} {obj.diff}")
+        if obj.diff == 'B': cb.set_visible(False)
         else:
-            obj.bind_property("del_a",
-                              cb,
-                              "active",
-                              GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            cb.set_visible(True)
+            # obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_b(self, factory, item):
-        cb = Gtk.CheckButton()
-        item.set_child(cb)
+        item.set_child(Gtk.CheckButton())
 
     def bind_del_b(self, factory, item):
         cb = item.get_child()
         obj = item.get_item()
-        print(f"del_b: {obj.name} {obj.diff}")
-        if obj.diff == 'A': cb.set_sensitive(False)
-        # else: obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+        # print(f"del_b: {obj.name} {obj.diff}")
+        if obj.diff == 'A': cb.set_visible(False)
+        else:
+            cb.set_visible(True)
+            # obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
