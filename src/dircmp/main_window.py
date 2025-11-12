@@ -48,28 +48,14 @@ class OptionsPanel():
 
         self.sync_type_selector = Gtk.DropDown.new_from_strings([v[0] for v in self.sync_types])
         self.box.append(self.sync_type_selector)
-
-        box_1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box_1.set_margin_start(12)
-        self.size_cb = Gtk.CheckButton()
+        
+        self.size_cb = self._make_cb('check size')
         self.size_cb.set_active(True)
-        box_1.append(self.size_cb)
-        box_1.append(Gtk.Label.new_with_mnemonic('check size'))
-        self.box.append(box_1)
+        self.time_cb = self._make_cb('check time')
+        self.content_cb = self._make_cb('check content')
+        self.test_cb = self._make_cb('test run')
+        self.test_cb.set_active(True)
 
-        box_2 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box_2.set_margin_start(12)
-        self.time_cb = Gtk.CheckButton()
-        box_2.append(self.time_cb)
-        box_2.append(Gtk.Label.new_with_mnemonic('check time'))
-        self.box.append(box_2)
-
-        box_3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        box_3.set_margin_start(12)
-        self.content_cb = Gtk.CheckButton()
-        box_3.append(self.content_cb)
-        box_3.append(Gtk.Label.new_with_mnemonic('check content'))
-        self.box.append(box_3)
 
     def get_box(self):
         return self.box
@@ -80,7 +66,18 @@ class OptionsPanel():
         return SyncOptions(sync_direction=sync_dir,
                            check_size=self.size_cb.get_active(),
                            check_time=self.time_cb.get_active(),
-                           check_content=self.content_cb.get_active())
+                           check_content=self.content_cb.get_active(),
+                           test_run=self.test_cb.get_active())
+
+    def _make_cb(self, label):
+        box_1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        box_1.set_margin_start(12)
+        cb = Gtk.CheckButton()
+        box_1.append(cb)
+        box_1.append(Gtk.Label.new_with_mnemonic(label))
+        self.box.append(box_1)
+        return cb
+
 
 class DirBox():
     def __init__(self, label, action):

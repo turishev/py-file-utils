@@ -73,7 +73,7 @@ def exec_handler():
         global _main_window
         global _action_status
         _action_status = ActionStatus.RUN
-
+        test_run = _main_window.get_sync_options().test_run
         oper_list = _main_window.get_oper_list()
         _main_window.result_list.clear()
         _main_window.execute_operations(oper_list)
@@ -88,7 +88,7 @@ def exec_handler():
         dialog.present()
         dialog.add_line('Start synchronization')
 
-        files.execute_operations(oper_list, lambda text: dialog.add_line(text))
+        files.execute_operations(oper_list, lambda text: dialog.add_line(text), test_run)
 
         fin_line = 'Synchronization is aborted' if aborted else 'Synchronization is done'
         dialog.add_line(fin_line)
