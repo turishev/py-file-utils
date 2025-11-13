@@ -19,12 +19,12 @@ class DataObject(GObject.GObject):
     diff = GObject.Property(type=str, default="")
     a_to_b = GObject.Property(type=bool, default=False)
     del_a = GObject.Property(type=bool, default=False)
-    b_to_a = GObject.Property(type=bool, default=False) # use INT instead BOOLEAN for sake of sort support
-    del_b = GObject.Property(type=bool, default=False) # use INT instead BOOLEAN for sake of sort support
+    b_to_a = GObject.Property(type=bool, default=False)
+    del_b = GObject.Property(type=bool, default=False)
     type_a = GObject.Property(type=str, default="")
     type_b = GObject.Property(type=str, default="")
-    size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1) # not int!
-    size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1) # not int!
+    size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1) # do not use int here!
+    size_b = GObject.Property(type=GObject.TYPE_INT64, default=-1) # do not use int here!
     time_a = GObject.Property(type=float, default=0.0)
     time_b = GObject.Property(type=float, default=0.0)
     path_a = GObject.Property(type=str, default="")
@@ -107,12 +107,9 @@ class ResultList():
         self.list_view.append_column(_create_list_column("B size", "size_b", self.setup_size_b, self.bind_size_b, "num"))
         self.list_view.append_column(_create_list_column("A time", "time_a", self.setup_time_a, self.bind_time_a, "num"))
         self.list_view.append_column(_create_list_column("B time", "time_b", self.setup_time_b, self.bind_time_b, "num"))
-        # self.list_view.append_column(_create_list_column("A owner", "owner_a", self.setup_owner_a, self.bind_owner_a, "str"))
-        # self.list_view.append_column(_create_list_column("B owner", "owner_b", self.setup_owner_b, self.bind_owner_b, "str"))
 
         sorter = Gtk.ColumnView.get_sorter(self.list_view)
         self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
-        # self.selection = Gtk.SingleSelection(model=self.sort_model)
         self.selection = Gtk.MultiSelection(model=self.sort_model)
         # self.selection.connect("selection-changed", self.on_sel_changed)
 
@@ -244,7 +241,7 @@ class ResultList():
             cb.set_visible(False)
         else:
             cb.set_visible(True)
-            # obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_b_to_a(self, factory, item):
         item.set_child(Gtk.CheckButton())
@@ -256,7 +253,7 @@ class ResultList():
         if obj.diff == 'A': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            # obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_a(self, factory, item):
         item.set_child(Gtk.CheckButton())
@@ -268,7 +265,7 @@ class ResultList():
         if obj.diff == 'B': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            # obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def setup_del_b(self, factory, item):
         item.set_child(Gtk.CheckButton())
@@ -280,7 +277,7 @@ class ResultList():
         if obj.diff == 'A': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            # obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
@@ -412,13 +409,18 @@ class ResultList():
         return len(self.store)
 
     def get_selected_file_path(self, letter):
-        if letter == 'a': return self.get_single_selection_item().path_a
-        if letter == 'b': return self.get_single_selection_item().path_b
-        return ''
+        item = self.get_single_selection_item()
+        if item is not None:
+            if letter == 'a': return item.path_a
+            elif letter == 'b': return item.path_b
+            else: return ''
+        else: return ''
+
 
 
     def get_selected_name(self):
-        return self.get_single_selection_item().name
+        item = self.get_single_selection_item()
+        return item.name if item is not None else ""
 
 
     def set_oper_flags_for_selected_items(self, oper : OperType):
