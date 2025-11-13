@@ -229,9 +229,21 @@ class ResultList():
         obj = item.get_item()
         label.set_text(_format_time(obj.time_b))
 
+    def _update_bool_field(self, button, item, field):
+        obj : DataObject = item.get_item()
+        print(f"toggle {button.get_active()} {obj.name} {obj.a_to_b}")
+        try:
+            obj.set_property(field, button.get_active())
+        except TypeError as e:
+            print(f"Error setting property: {e}")
+        except GObject.GError as e:
+            print(f"GObject Error: {e}")
+
     def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         # print(f"setup_a_to_b {item}")
-        item.set_child(Gtk.CheckButton())
+        bt = Gtk.ToggleButton()
+        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
+        item.set_child(bt)
 
     def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         cb = item.get_child()
@@ -241,10 +253,13 @@ class ResultList():
             cb.set_visible(False)
         else:
             cb.set_visible(True)
-            obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
 
     def setup_b_to_a(self, factory, item):
-        item.set_child(Gtk.CheckButton())
+        bt = Gtk.ToggleButton()
+        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'b_to_a'))
+        item.set_child(bt)
+
 
     def bind_b_to_a(self, factory, item):
         cb = item.get_child()
@@ -253,10 +268,14 @@ class ResultList():
         if obj.diff == 'A': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE)
+
 
     def setup_del_a(self, factory, item):
-        item.set_child(Gtk.CheckButton())
+        bt = Gtk.ToggleButton()
+        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'del_a'))
+        item.set_child(bt)
+
 
     def bind_del_a(self, factory, item):
         cb = item.get_child()
@@ -265,10 +284,14 @@ class ResultList():
         if obj.diff == 'B': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE)
+
 
     def setup_del_b(self, factory, item):
-        item.set_child(Gtk.CheckButton())
+        bt = Gtk.ToggleButton()
+        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'del_b'))
+        item.set_child(bt)
+
 
     def bind_del_b(self, factory, item):
         cb = item.get_child()
@@ -277,7 +300,7 @@ class ResultList():
         if obj.diff == 'A': cb.set_visible(False)
         else:
             cb.set_visible(True)
-            obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE | GObject.BindingFlags.BIDIRECTIONAL)
+            obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
