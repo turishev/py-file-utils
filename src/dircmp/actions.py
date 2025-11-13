@@ -75,8 +75,7 @@ def exec_handler():
         _action_status = ActionStatus.RUN
         test_run = _main_window.get_sync_options().test_run
         oper_list = _main_window.get_oper_list()
-        _main_window.result_list.clear()
-        _main_window.execute_operations(oper_list)
+        _main_window.execute_operations(oper_list, test_run=test_run)
 
         aborted = False
         def on_break():
@@ -93,7 +92,7 @@ def exec_handler():
         fin_line = 'Synchronization is aborted' if aborted else 'Synchronization is done'
         dialog.add_line(fin_line)
         dialog.operations_end()
-        _main_window.end_execution(abort=aborted)
+        _main_window.end_execution(test_run=test_run, abort=aborted)
         _action_status = ActionStatus.WAIT
 
     show_confirm_dialog(_main_window, "All operations will be executed. Proceed it?", do_oper)

@@ -237,18 +237,18 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_box.set_sensitive(True)
         self.set_status(status)
 
-    def execute_operations(self, oper_list):
-        self.result_list.clear()
+    def execute_operations(self, oper_list, test_run=False):
+        if not test_run: self.result_list.clear()
         self.compare_bt.set_sensitive(False)
-        self.execute_bt.set_sensitive(False)
         self.dir_a_box.set_sensitive(False)
         self.dir_b_box.set_sensitive(False)
         self.break_bt.set_sensitive(True)
         self.set_status('Executing..')
 
-    def end_execution(self, abort=False):
-        status = "Execution aborted" if abort else  "Execution finished" 
+    def end_execution(self, test_run=False, abort=False):
+        status = "Execution aborted" if abort else  "Execution finished"
         self.compare_bt.set_sensitive(True)
+        self.execute_bt.set_sensitive(test_run)
         self.break_bt.set_sensitive(False)
         self.dir_a_box.set_sensitive(True)
         self.dir_b_box.set_sensitive(True)
