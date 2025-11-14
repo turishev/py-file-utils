@@ -1,13 +1,16 @@
 import os
 import gi
 gi.require_version('Gtk', '4.0')
-gi.require_version('Adw', '1')
-from gi.repository import Adw
+# gi.require_version('Adw', '1')
+# from gi.repository import Adw
+from gi.repository import Gtk
+
 from main_window import MainWindow
 from actions import init_actions
 
 
-class MyApp(Adw.Application):
+# class MyApp(Adw.Application):
+class MyApp(Gtk.Application):
     def __init__(self, dir_a, dir_b):
         super().__init__()
         # cwd = os.getcwd()

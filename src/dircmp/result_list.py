@@ -1,11 +1,13 @@
 from __future__ import annotations # for list annotations
 from typing import TypeAlias
 
-import gi
+import sys
+import traceback
+
 from time import localtime, strftime
 import re
 
-
+import gi
 gi.require_version('Gtk', '4.0')
 from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 
@@ -92,14 +94,14 @@ def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
     factory = Gtk.SignalListItemFactory()
     factory.connect("setup", setup_fn)
     factory.connect("bind", bind_fn)
-    exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
+    # exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
 
-    if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
-    elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp) # works for bool also
-    else: sorter = None
+    # if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
+    # elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp) # works for bool also
+    # else: sorter = None
 
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
-    column.set_sorter(sorter)
+    # column.set_sorter(sorter)
     return column
 
 class ResultList():
@@ -123,11 +125,15 @@ class ResultList():
         self.list_view.append_column(_create_list_column("A time", "time_a", self.setup_time_a, self.bind_time_a, "num"))
         self.list_view.append_column(_create_list_column("B time", "time_b", self.setup_time_b, self.bind_time_b, "num"))
 
-        sorter = Gtk.ColumnView.get_sorter(self.list_view)
-        self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
-        self.selection = Gtk.MultiSelection(model=self.sort_model)
-        # self.selection.connect("selection-changed", self.on_sel_changed)
+        # sorter = Gtk.ColumnView.get_sorter(self.list_view)
+        # self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
+        # # self.selection = Gtk.MultiSelection(model=self.sort_model)
+        # # self.selection = Gtk.MultiSelection(model=self.sort_model)
+        # self.selection = Gtk.NoSelection(model=self.sort_model)
+        # # self.selection.connect("selection-changed", self.on_sel_changed)
 
+        self.selection = Gtk.NoSelection(model=self.store)
+        
         self.list_view.set_model(self.selection)
         self.list_view.set_hexpand(True)
         self.list_view.set_vexpand(True)
@@ -245,6 +251,8 @@ class ResultList():
         label.set_text(_format_time(obj.time_b))
 
     def _update_bool_field(self, button, item, field):
+        print(field)
+        traceback.print_stack(file=sys.stdout)
         try:
             obj : DataObject = item.get_item()
             print(f"toggle {button.get_active()} {obj.name} {obj.a_to_b}")
@@ -260,18 +268,32 @@ class ResultList():
     def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         # print(f"setup_a_to_b {item}")
         bt = Gtk.ToggleButton()
-        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
+        # bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
         item.set_child(bt)
 
     def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         cb = item.get_child()
         obj : DataObject = item.get_item()
         # print(f"a_to_b: {item} {obj.name} {obj.diff}")
+        mux = False
+        def fn1(binding, v):
+            print(f"fn1:{binding} {v}")
+            return v
+        def fn2(binding, v):
+            print(f"fn2:{binding} {v}")
+            return v
+        
         if obj.diff == 'B':
-            cb.set_visible(False)
+            pass #cb.set_visible(False)
         else:
-            cb.set_visible(True)
-            obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
+            #cb.set_visible(True)
+            obj.bind_property("a_to_b", cb , "active",
+                              flags=GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+                              transform_to=fn1,
+                              transform_from=fn2)
+
+            # obj.bind_property("a_to_b", cb , "active")
+            # obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
 
     def setup_b_to_a(self, factory, item):
         bt = Gtk.ToggleButton()
@@ -341,11 +363,11 @@ class ResultList():
                              path_b='' if item.file_b is None else item.file_b.path)
             self.store.append(obj)
 
-            model = self.selection
-            model.select_item(0, True)
-            self.list_view.scroll_to(0,
-                                     self.name_column,
-                                     flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+            # model = self.selection
+            # model.select_item(0, True)
+            # self.list_view.scroll_to(0,
+            #                          self.name_column,
+            #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
         except Exception as e:# we can run into error if name in invalid encoding
             print(f"Error of creating DataObject:{e}")
 
