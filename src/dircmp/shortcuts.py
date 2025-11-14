@@ -1,9 +1,10 @@
 
 shortcuts = {
-    'quit' : '<Ctrl>q',
-    'select-dir-a' : '<Alt>a',
-    'select-dir-b': '<Alt>b',
-    'compare-dirs': '<Alt>c',
-    'exec-operations': '<Alt>o',
-    'break-operations': '<Ctrl>b'
+    'quit' : ('<Ctrl>q', 'Quit'),
+    'select-dir-a' : ('<Alt>a', 'Select A directory'),
+    'select-dir-b': ('<Alt>b', 'Select B directory'),
+    'compare-dirs': ('<Alt>c', 'Compare directories'),
+    'exec-operations': ('<Alt>o', 'Execute all operations'),
+    'break-operations': ('<Ctrl>b', 'Break comparing'),
+    'help': ('<Ctrl>h', 'Show help'), 
 };

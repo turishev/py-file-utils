@@ -8,11 +8,10 @@ from gi.repository import Gtk, Adw
 
 
 from app_types import *
-from shortcuts import shortcuts
 from result_list import ResultList
 
 def make_button(label, action):
-    shortcut = f"({shortcuts[action]})" if action in shortcuts else ""
+    shortcut = "" # f"({shortcuts[action]})" if action in shortcuts else ""
     bt = Gtk.Button(label=f"{label} {shortcut}")
     bt.set_action_name('app.' + action)
     return bt
@@ -194,17 +193,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self.break_bt.set_sensitive(False)
         self.bottom_box.append(self.break_bt)
 
+        self.help_bt = make_button("Help", "help")
+        self.bottom_box.append(self.help_bt)
+
         self.close_bt = make_button("Close", "quit")
         self.bottom_box.append(self.close_bt)
-
-    #     self.header = Gtk.HeaderBar()
-    #     self.set_titlebar(self.header)
-
-    #     app = self.get_application()
-    #     sm = app.get_style_manager()
-    #     sm.set_color_scheme(Adw.ColorScheme.PREFER_LIGHT) ## Adw.ColorScheme.PREFER_DARK
-    #     # для стилизации приложения - adwaita
-    #     # https://gnome.pages.gitlab.gnome.org/libadwaita/doc/main/styles-and-appearance.html
 
 
     def after_init(self):

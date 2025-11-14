@@ -13,7 +13,7 @@ from pathlib import PurePath
 
 from app_types import *
 import files
-from dialogs import show_open_dir_dialog, show_confirm_dialog,  ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
+from dialogs import show_open_dir_dialog, show_confirm_dialog, show_info_dialog, ExcludeFilesDialog, ExcludeNamesDialog, ExcludeOperFlagsDialog, ExecLogDialog
 from shortcuts import shortcuts;
 
 
@@ -54,7 +54,7 @@ def compare_handler():
         items_count += 1
         _main_window.result_list.append(item)
         _main_window.set_count(items_count)
-        # _update_ui()
+        _update_ui()
 
     result = files.compare_dirs(dir_a, dir_b, opts, _add_new_item)
 
@@ -200,6 +200,13 @@ def exclude_names_from_list():
     dialog.present()
 
 
+def show_help_handler():
+    print("show_help_handler")
+    global _main_window
+    head = "Shortcuts\n"
+    text = head + "\n".join([f"{v[0]}\t{v[1]}" for v in shortcuts.values()])
+    show_info_dialog(_main_window, text)
+
 
 _actions = [
     ('quit', quit_handler),
@@ -219,6 +226,7 @@ _actions = [
     ('set-operation-flags', set_operation_flags),
     ('exclude-files-from-list', exclude_files_from_list),
     ('exclude-names-from-list', exclude_names_from_list),
+    ('help', show_help_handler),
 ]
 
 
@@ -237,5 +245,5 @@ def init_actions(app, win):
         app.set_accels_for_action("app.%s" % name, keys)
 
     for act, handler in _actions:
-        key = shortcuts[act]  if act in shortcuts else ""
+        key = shortcuts[act][0] if act in shortcuts else ""
         _create_act(act, [key], handler)

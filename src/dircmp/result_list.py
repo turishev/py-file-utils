@@ -11,6 +11,21 @@ from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 
 from app_types import *
 
+'''
+There is a trouble with using G_BINDING_BIDIRECTIONAL to bind a DataObject filed to
+UI elements like Gtk.ToggleButton or CheckBox.
+
+Using simple call of
+obj.bind_property(a_prop_name, a_button, "active", GObject.BindingFlags.BIDIRECTIONAL)
+leads to unpredictable behavior when we scrolling a window.
+
+That's why a combined method is used here.
+1) obj.bind_property(a_prop_name, a_button, "active", GObject.BindingFlags.SYNC_CREATE)
+to show data in UI
+2) bt.connect('toggled', ...)
+to update field of DataObject
+'''
+
 
 class DataObject(GObject.GObject):
     __gtype_name__ = 'DataObject'
@@ -230,14 +245,17 @@ class ResultList():
         label.set_text(_format_time(obj.time_b))
 
     def _update_bool_field(self, button, item, field):
-        obj : DataObject = item.get_item()
-        print(f"toggle {button.get_active()} {obj.name} {obj.a_to_b}")
         try:
+            obj : DataObject = item.get_item()
+            print(f"toggle {button.get_active()} {obj.name} {obj.a_to_b}")
             obj.set_property(field, button.get_active())
         except TypeError as e:
             print(f"Error setting property: {e}")
         except GObject.GError as e:
             print(f"GObject Error: {e}")
+        except Exception as e:
+            print(f"_update_bool_field error: {e}")
+            
 
     def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         # print(f"setup_a_to_b {item}")
@@ -319,18 +337,15 @@ class ResultList():
                              size_b=-1 if item.file_b is None else item.file_b.size,
                              time_a=-1 if item.file_a is None else item.file_a.time,
                              time_b=-1 if item.file_b is None else item.file_b.time,
-                             # '' if item.file_a is None else item.file_a.owner,
-                             # '' if item.file_b is None else item.file_b.owner
                              path_a='' if item.file_a is None else item.file_a.path,
-                             path_b='' if item.file_b is None else item.file_b.path,
-                             )
-
+                             path_b='' if item.file_b is None else item.file_b.path)
             self.store.append(obj)
-            # model = self.selection
-            # model.select_item(0, True)
-            # self.list_view.scroll_to(0,
-            #                          self.name_column,
-            #                          flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
+
+            model = self.selection
+            model.select_item(0, True)
+            self.list_view.scroll_to(0,
+                                     self.name_column,
+                                     flags=Gtk.ListScrollFlags(Gtk.ListScrollFlags.SELECT))
         except Exception as e:# we can run into error if name in invalid encoding
             print(f"Error of creating DataObject:{e}")
 
