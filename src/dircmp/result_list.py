@@ -260,7 +260,7 @@ class ResultList():
     def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         # print(f"setup_a_to_b {item}")
         bt = Gtk.ToggleButton()
-        # bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
+        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
         item.set_child(bt)
 
     def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
