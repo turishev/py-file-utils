@@ -255,12 +255,12 @@ class ResultList():
             print(f"GObject Error: {e}")
         except Exception as e:
             print(f"_update_bool_field error: {e}")
-            
+
 
     def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
         # print(f"setup_a_to_b {item}")
         bt = Gtk.ToggleButton()
-        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
+        # bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
         item.set_child(bt)
 
     def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
@@ -427,21 +427,25 @@ class ResultList():
         inx = sel.get_minimum()
         return self.selection.get_item(inx)
 
-
     def get_oper_list(self):
+        print("get_oper_list")
         result = []
-        pos = 0
-        while True:
-            item = self.store.get_item(pos)
-            pos += 1
-            if item is None:
-                break
-            else:
-                optype = _get_op_type(item.a_to_b, item.b_to_a, item.del_a, item.del_b)
-                if optype != OperType.NOTHING:
-                    result.append(Oper(optype, item.path_a, item.path_b))
+        # 1. Get the selection model (Gtk.SingleSelection, Gtk.MultiSelection, etc.)
+        selection_model = self.list_view.get_model()
+
+        # 2. Get the actual underlying data model (Gio.ListModel, usually Gio.ListStore)
+        # The selection model also has a get_model() method
+        data_model = selection_model.get_model()
+
+        for item in data_model:
+            # This works because Gio.ListModel implements the Python iterator protocol
+            print(f"Item: {item.name}, {item.a_to_b} {item.del_a} {item.b_to_a} {item.del_b}")
+            optype = _get_op_type(item.a_to_b, item.b_to_a, item.del_a, item.del_b)
+            if optype != OperType.NOTHING:
+                result.append(Oper(optype, item.path_a, item.path_b))
 
         return result
+
 
     def get_list_len(self):
         return len(self.store)
