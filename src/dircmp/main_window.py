@@ -148,8 +148,10 @@ class MainWindow(Gtk.ApplicationWindow):
         self.dir_b_box = DirBox("B", "select-dir-b")
         self.main_box.append(self.dir_a_box.get_box())
         self.main_box.append(self.dir_b_box.get_box())
-        self.dir_a_box.set_dir('/home/prog/myproj/py-file-utils/assets/d1')
-        self.dir_b_box.set_dir('/home/prog/myproj/py-file-utils/assets/d2')
+        # self.dir_a_box.set_dir('/home/prog/myproj/py-file-utils/assets/d1')
+        # self.dir_b_box.set_dir('/home/prog/myproj/py-file-utils/assets/d2')
+        self.dir_a_box.set_dir('/home/prog/english')
+        self.dir_b_box.set_dir('/home/prog/tmp')
 
         self.top_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         self.top_box.set_spacing(32)

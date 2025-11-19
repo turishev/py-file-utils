@@ -14,18 +14,11 @@ from gi.repository import Gtk, GLib, Gdk, Gio, GObject
 from app_types import *
 
 '''
+NOTE!
 There is a trouble with using G_BINDING_BIDIRECTIONAL to bind a DataObject filed to
 UI elements like Gtk.ToggleButton or CheckBox.
 
-Using simple call of
-obj.bind_property(a_prop_name, a_button, "active", GObject.BindingFlags.BIDIRECTIONAL)
-leads to unpredictable behavior when we scrolling a window.
-
-That's why a combined method is used here.
-1) obj.bind_property(a_prop_name, a_button, "active", GObject.BindingFlags.SYNC_CREATE)
-to show data in UI
-2) bt.connect('toggled', ...)
-to update field of DataObject
+That's why we keep it here  Gtk.ToggleButton inside DataObject and use bind_fn only to show it.
 '''
 
 
@@ -34,10 +27,10 @@ class DataObject(GObject.GObject):
 
     name = GObject.Property(type=str, default="")
     diff = GObject.Property(type=str, default="")
-    a_to_b = GObject.Property(type=bool, default=False)
-    del_a = GObject.Property(type=bool, default=False)
-    b_to_a = GObject.Property(type=bool, default=False)
-    del_b = GObject.Property(type=bool, default=False)
+    # a_to_b = GObject.Property(type=bool, default=False)
+    # del_a = GObject.Property(type=bool, default=False)
+    # b_to_a = GObject.Property(type=bool, default=False)
+    # del_b = GObject.Property(type=bool, default=False)
     type_a = GObject.Property(type=str, default="")
     type_b = GObject.Property(type=str, default="")
     size_a = GObject.Property(type=GObject.TYPE_INT64, default=-1) # do not use int here!
@@ -47,10 +40,7 @@ class DataObject(GObject.GObject):
     path_a = GObject.Property(type=str, default="")
     path_b = GObject.Property(type=str, default="")
 
-    def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b,
-                 path_a, path_b,
-                 # owner_a='', owner_b=''
-                 ):
+    def __init__(self, name, diff, type_a, type_b, size_a, size_b, time_a, time_b, path_a, path_b):
         super().__init__()
         self.name = name
         self.diff = diff
@@ -58,16 +48,14 @@ class DataObject(GObject.GObject):
         self.type_b = type_b
         self.size_a = size_a
         self.size_b = size_b
-        # self.owner_a = owner_a
-        # self.owner_b = owner_b
         self.time_a = time_a
         self.time_b = time_b
         self.path_a = path_a
         self.path_b = path_b
-        self.a_to_b=False
-        self.del_a=False
-        self.b_to_a=False
-        self.del_b=False
+        self.a_to_b=Gtk.ToggleButton()
+        self.del_a=Gtk.ToggleButton()
+        self.b_to_a=Gtk.ToggleButton()
+        self.del_b=Gtk.ToggleButton()
 
 
 def _format_time(tm):
@@ -90,18 +78,19 @@ def _get_op_type(a_to_b : bool, b_to_a : bool, del_a : bool, del_b : bool) -> Op
         else: return OperType.NOTHING
 
 
-def _create_list_column(name, data_field, setup_fn, bind_fn, sorter_type):
+def _create_list_column(name, data_field, setup_fn=None, bind_fn=None, sorter_type=None):
     factory = Gtk.SignalListItemFactory()
-    factory.connect("setup", setup_fn)
-    factory.connect("bind", bind_fn)
-    # exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
-
-    # if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
-    # elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp) # works for bool also
-    # else: sorter = None
+    if setup_fn is not None: factory.connect("setup", setup_fn)
+    if bind_fn is not None: factory.connect("bind", bind_fn)
 
     column = Gtk.ColumnViewColumn(title=name, factory=factory)
-    # column.set_sorter(sorter)
+    if sorter_type is not None:
+        exp = Gtk.PropertyExpression.new(DataObject, None, data_field)
+        if sorter_type == "str": sorter = Gtk.StringSorter(expression=exp)
+        elif sorter_type == "num": sorter = Gtk.NumericSorter(expression=exp)
+        else: sorter = None
+        if sorter is not None: column.set_sorter(sorter)
+
     return column
 
 class ResultList():
@@ -113,10 +102,11 @@ class ResultList():
         self.name_column.set_expand(True)
         self.list_view.append_column(self.name_column)
         self.list_view.append_column(_create_list_column("Diff", "diff", self.setup_diff, self.bind_diff, "str"))
-        self.list_view.append_column(_create_list_column("A->B", "a_to_b", self.setup_a_to_b, self.bind_a_to_b, "num"))
-        self.list_view.append_column(_create_list_column("Del A", "del_a", self.setup_del_a, self.bind_del_a, "num"))
-        self.list_view.append_column(_create_list_column("B->A", "b_to_a", self.setup_b_to_a, self.bind_b_to_a, "num"))
-        self.list_view.append_column(_create_list_column("Del B", "del_b", self.setup_del_b, self.bind_del_b, "num"))
+
+        self.list_view.append_column(_create_list_column("A->B", "a_to_b", None, self.bind_a_to_b))
+        self.list_view.append_column(_create_list_column("Del A", "del_a", None, self.bind_del_a))
+        self.list_view.append_column(_create_list_column("B->A", "b_to_a", None, self.bind_b_to_a))
+        self.list_view.append_column(_create_list_column("Del B", "del_b", None, self.bind_del_b))
 
         self.list_view.append_column(_create_list_column("A type", "type_a", self.setup_type_a, self.bind_type_a, "str"))
         self.list_view.append_column(_create_list_column("B type", "type_b", self.setup_type_b, self.bind_type_b, "str"))
@@ -125,15 +115,12 @@ class ResultList():
         self.list_view.append_column(_create_list_column("A time", "time_a", self.setup_time_a, self.bind_time_a, "num"))
         self.list_view.append_column(_create_list_column("B time", "time_b", self.setup_time_b, self.bind_time_b, "num"))
 
-        # sorter = Gtk.ColumnView.get_sorter(self.list_view)
-        # self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
-        # # self.selection = Gtk.MultiSelection(model=self.sort_model)
-        # # self.selection = Gtk.MultiSelection(model=self.sort_model)
+        sorter = Gtk.ColumnView.get_sorter(self.list_view)
+        self.sort_model = Gtk.SortListModel(model=self.store, sorter=sorter)
+        self.selection = Gtk.MultiSelection(model=self.sort_model)
         # self.selection = Gtk.NoSelection(model=self.sort_model)
-        # # self.selection.connect("selection-changed", self.on_sel_changed)
+        # self.selection.connect("selection-changed", self.on_sel_changed)
 
-        self.selection = Gtk.NoSelection(model=self.store)
-        
         self.list_view.set_model(self.selection)
         self.list_view.set_hexpand(True)
         self.list_view.set_vexpand(True)
@@ -208,7 +195,6 @@ class ResultList():
 
     def setup_owner_a(self, factory, item):
         label = Gtk.Label()
-        # label.set_xalign(0.5)
         item.set_child(label)
         self.connect_menu(label, item)
 
@@ -219,7 +205,6 @@ class ResultList():
 
     def setup_owner_b(self, factory, item):
         label = Gtk.Label()
-        # label.set_xalign(0.5)
         item.set_child(label)
         self.connect_menu(label, item)
 
@@ -230,7 +215,6 @@ class ResultList():
 
     def setup_time_a(self, factory, item):
         label = Gtk.Label()
-        # label.set_xalign(0.5)
         item.set_child(label)
         self.connect_menu(label, item)
 
@@ -241,7 +225,6 @@ class ResultList():
 
     def setup_time_b(self, factory, item):
         label = Gtk.Label()
-        # label.set_xalign(0.5)
         item.set_child(label)
         self.connect_menu(label, item)
 
@@ -250,97 +233,47 @@ class ResultList():
         obj = item.get_item()
         label.set_text(_format_time(obj.time_b))
 
-    def _update_bool_field(self, button, item, field):
-        print(field)
-        traceback.print_stack(file=sys.stdout)
-        try:
-            obj : DataObject = item.get_item()
-            print(f"toggle {button.get_active()} {obj.name} {obj.a_to_b}")
-            obj.set_property(field, button.get_active())
-        except TypeError as e:
-            print(f"Error setting property: {e}")
-        except GObject.GError as e:
-            print(f"GObject Error: {e}")
-        except Exception as e:
-            print(f"_update_bool_field error: {e}")
-
-
-    def setup_a_to_b(self, factory, item : Gtk.ColumnViewCell):
-        # print(f"setup_a_to_b {item}")
-        bt = Gtk.ToggleButton()
-        # bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'a_to_b'))
-        item.set_child(bt)
-
     def bind_a_to_b(self, factory, item : Gtk.ColumnViewCell):
-        cb = item.get_child()
         obj : DataObject = item.get_item()
-        # print(f"a_to_b: {item} {obj.name} {obj.diff}")
-        mux = False
-        def fn1(binding, v):
-            print(f"fn1:{binding} {v}")
-            return v
-        def fn2(binding, v):
-            print(f"fn2:{binding} {v}")
-            return v
-        
-        if obj.diff == 'B':
-            pass #cb.set_visible(False)
-        else:
-            #cb.set_visible(True)
-            obj.bind_property("a_to_b", cb , "active",
-                              flags=GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
-                              transform_to=fn1,
-                              transform_from=fn2)
+        cb = obj.a_to_b
+        if obj.diff != 'B':
+            if cb.get_parent() != None: cb.unparent()
+            item.set_child(cb)
+            # print(f"bind a_to_b error: {obj.name}, parent:{cb.get_parent()}")
 
-            # obj.bind_property("a_to_b", cb , "active")
-            # obj.bind_property("a_to_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
-
-    def setup_b_to_a(self, factory, item):
-        bt = Gtk.ToggleButton()
-        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'b_to_a'))
-        item.set_child(bt)
-
+            
+        # if obj.diff != 'B': item.set_child(cb)
+        # if obj.diff == 'B': cb.set_visible(False)
+        # else:
+        #     cb.set_visible(True)
+        #     item.set_child(cb)
 
     def bind_b_to_a(self, factory, item):
-        cb = item.get_child()
-        obj = item.get_item()
-        # print(f"b_to_a: {obj.name} {obj.diff}")
-        if obj.diff == 'A': cb.set_visible(False)
-        else:
-            cb.set_visible(True)
-            obj.bind_property("b_to_a", cb , "active", GObject.BindingFlags.SYNC_CREATE)
-
-
-    def setup_del_a(self, factory, item):
-        bt = Gtk.ToggleButton()
-        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'del_a'))
-        item.set_child(bt)
-
+        pass
+        # obj = item.get_item()
+        # cb = obj.b_to_a
+        # if obj.diff == 'A': cb.set_visible(False)
+        # else:
+        #     cb.set_visible(True)
+        #     item.set_child(cb)
 
     def bind_del_a(self, factory, item):
-        cb = item.get_child()
-        obj = item.get_item()
-        # print(f"del_a: {obj.name} {obj.diff}")
-        if obj.diff == 'B': cb.set_visible(False)
-        else:
-            cb.set_visible(True)
-            obj.bind_property("del_a", cb, "active", GObject.BindingFlags.SYNC_CREATE)
-
-
-    def setup_del_b(self, factory, item):
-        bt = Gtk.ToggleButton()
-        bt.connect('toggled', lambda _: self._update_bool_field(bt, item, 'del_b'))
-        item.set_child(bt)
-
+        pass
+        # obj = item.get_item()
+        # cb = obj.del_a
+        # if obj.diff == 'B': cb.set_visible(False)
+        # else:
+        #     cb.set_visible(True)
+        #     item.set_child(cb)
 
     def bind_del_b(self, factory, item):
-        cb = item.get_child()
-        obj = item.get_item()
-        # print(f"del_b: {obj.name} {obj.diff}")
-        if obj.diff == 'A': cb.set_visible(False)
-        else:
-            cb.set_visible(True)
-            obj.bind_property("del_b", cb , "active", GObject.BindingFlags.SYNC_CREATE)
+        pass
+        # obj = item.get_item()
+        # cb = obj.del_b
+        # if obj.diff == 'A': cb.set_visible(False)
+        # else:
+        #     cb.set_visible(True)
+        #     item.set_child(cb)
 
     def connect_menu(self, widget, item):
         click = Gtk.GestureClick()
@@ -461,8 +394,12 @@ class ResultList():
 
         for item in data_model:
             # This works because Gio.ListModel implements the Python iterator protocol
-            print(f"Item: {item.name}, {item.a_to_b} {item.del_a} {item.b_to_a} {item.del_b}")
-            optype = _get_op_type(item.a_to_b, item.b_to_a, item.del_a, item.del_b)
+            print(f"Item: {item.name}, {item.a_to_b.get_active()} {item.del_a.get_active()} {item.b_to_a.get_active()} {item.del_b.get_active()}")
+            optype = _get_op_type(item.a_to_b.get_active(),
+                                  item.b_to_a.get_active(),
+                                  item.del_a.get_active(),
+                                  item.del_b.get_active())
+
             if optype != OperType.NOTHING:
                 result.append(Oper(optype, item.path_a, item.path_b))
 
@@ -490,27 +427,27 @@ class ResultList():
     def set_oper_flags_for_selected_items(self, oper : OperType):
         def get_flag(inx):
             item = self.selection.get_item(inx)
-            if oper == OperType.COPY_AB: return item.a_to_b
-            elif oper == OperType.COPY_BA: return item.b_to_a
-            elif oper == OperType.DEL_A: return item.del_a
-            elif oper == OperType.DEL_B: return item.del_b
+            if oper == OperType.COPY_AB: return item.a_to_b.get_active()
+            elif oper == OperType.COPY_BA: return item.b_to_a.get_active()
+            elif oper == OperType.DEL_A: return item.del_a.get_active()
+            elif oper == OperType.DEL_B: return item.del_b.get_active()
             else: return False
 
-        def set_flag(inx, v):
+        def set_flag(inx : int, v : bool):
             item = self.selection.get_item(inx)
 
             if oper == OperType.COPY_AB:
-                item.b_to_a = False
-                item.del_b = False
-                if  item.diff != 'B': item.a_to_b = v
+                item.b_to_a.set_active(False)
+                item.del_b.set_active(False)
+                if  item.diff != 'B': item.a_to_b.set_active(v)
             elif oper == OperType.COPY_BA:
-                item.a_to_b = False
-                item.del_a = False
-                if  item.diff != 'A': item.b_to_a = v
+                item.a_to_b.set_active(False)
+                item.del_a.set_active(False)
+                if  item.diff != 'A': item.b_to_a.set_active(v)
             elif oper == OperType.DEL_A:
-                if  item.diff != 'B:': item.del_a = v
+                if  item.diff != 'B:': item.del_a.set_active(v)
             elif oper == OperType.DEL_B:
-                if item.diff != 'A': item.del_b = v
+                if item.diff != 'A': item.del_b.set_active(v)
 
         sel : Gtk.Bitset = self.selection.get_selection()
         is_valid,iter,data_index = Gtk.BitsetIter.init_first(sel)
@@ -521,12 +458,13 @@ class ResultList():
             is_valid,data_index =  iter.next()
 
 
-    def set_oper_flags_batch(self, path, a_to_b, del_a, b_to_a, del_b):
+    def set_oper_flags_batch(self, path, a_to_b : bool, del_a : bool, b_to_a : bool, del_b : bool):
         model = self.store
         for i in range(model.get_n_items()):
             item = model.get_item(i)
             if item.name.startswith(path):
-                item.a_to_b = a_to_b and item.diff != 'B'
-                item.b_to_a = b_to_a and item.diff != 'A'
-                item.del_a = del_a and not b_to_a and item.diff != 'B'
-                item.del_b = del_b and not a_to_b and item.diff != 'A'
+                item.a_to_b.set_active(item.diff != 'B' and a_to_b)
+                item.b_to_a.set_active(item.diff != 'A' and b_to_a)
+                item.del_a.set_active(item.diff != 'B' and not b_to_a and del_a)
+                item.del_b.set_active(item.diff != 'A' and not a_to_b and del_b)
+
